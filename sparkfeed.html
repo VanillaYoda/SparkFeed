@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SparkFeed</title>
+<style>
+  :root {
+    --bg-deep: #0B0E1A;
+    --bg-panel: #121629;
+    --bg-panel-2: #171C34;
+    --line: #2A3050;
+    --gold: #F2C879;
+    --teal: #4FD1C5;
+    --coral: #E8886B;
+    --text-main: #E9EAF2;
+    --text-dim: #9099B8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-deep);
+    color: var(--text-main);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.6;
+  }
+  .mono {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.08em;
+  }
+  #stars {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* ---------- fake browser chrome (branding, not a live link) ---------- */
+  #chrome-bar {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; gap: 10px;
+    background: #05070F;
+    border-bottom: 1px solid var(--line);
+    padding: 10px 16px;
+  }
+  #chrome-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+  #chrome-bar .dot.r { background: #E8886B; }
+  #chrome-bar .dot.y { background: #F2C879; }
+  #chrome-bar .dot.g { background: #4FD1C5; }
+  #chrome-bar .url {
+    margin-left: 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    flex: 1;
+    max-width: 320px;
+  }
+
+  main { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 40px 20px 100px; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ---------- onboarding ---------- */
+  #onboarding-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 40px 32px;
+    margin-top: 40px;
+  }
+  #onboarding-card h1 {
+    font-size: 2rem; margin: 0 0 6px;
+  }
+  #onboarding-card p.sub { color: var(--text-dim); margin: 0 0 32px; font-size: 0.95rem; }
+
+  label {
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    margin-bottom: 6px;
+    margin-top: 20px;
+  }
+  input[type=text], input[type=number], select {
+    width: 100%;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    color: var(--text-main);
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    padding: 12px 14px;
+    border-radius: 4px;
+  }
+  input:focus, select:focus { outline: 2px solid var(--gold); }
+
+  button {
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 4px;
+    padding: 12px 22px;
+    font-size: 0.85rem;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: #1a1408;
+    margin-top: 28px;
+    width: 100%;
+  }
+  .btn-primary:hover { background: #f5d691; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text-main);
+  }
+  .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+
+  /* ---------- dashboard ---------- */
+  .greeting { margin-bottom: 40px; }
+  .greeting .eyebrow { color: var(--teal); font-size: 0.75rem; text-transform: uppercase; }
+  .greeting h1 { margin: 6px 0 0; font-size: 1.9rem; }
+
+  section.panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin-bottom: 32px;
+  }
+  section.panel > h2 {
+    font-size: 1.1rem; margin: 0 0 18px;
+    font-weight: normal;
+    color: var(--gold);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+
+  #apod-card img, #apod-card iframe { width: 100%; border-radius: 4px; aspect-ratio: 16/9; border:none; display:block; }
+  #apod-title { color: var(--gold); font-size: 1.2rem; margin: 14px 0 4px; }
+  #apod-date { font-size: 0.75rem; color: var(--text-dim); }
+  #apod-explanation { margin-top: 10px; font-size: 0.95rem; }
+  .loading, .error { color: var(--text-dim); font-style: italic; padding: 20px 0; }
+
+  .vocab-item {
+    border-bottom: 1px solid var(--line);
+    padding: 14px 0;
+  }
+  .vocab-item:last-child { border-bottom: none; }
+  .vocab-word { color: var(--coral); font-size: 1.05rem; margin-right: 8px; }
+  .vocab-def { color: var(--text-dim); font-size: 0.92rem; }
+
+  .quiz-q { margin-bottom: 22px; }
+  .quiz-q p.prompt { margin: 0 0 10px; font-size: 0.98rem; }
+  .quiz-opt {
+    display: block;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 0.92rem;
+  }
+  .quiz-opt:hover { border-color: var(--teal); }
+  .quiz-opt.selected { border-color: var(--gold); background: #1d2038; }
+  .quiz-opt.correct { border-color: var(--teal); background: #12312d; }
+  .quiz-opt.incorrect { border-color: var(--coral); background: #331d1a; }
+  #quiz-score { font-size: 1rem; color: var(--gold); margin-top: 10px; }
+
+  .site-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .site-tab {
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+  }
+  .site-tab.active { border-color: var(--gold); color: var(--gold); }
+  #site-frame-wrap {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #05070F;
+  }
+  #site-frame { width: 100%; height: 420px; border: none; display:block; }
+  .site-fallback {
+    padding: 14px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .site-fallback a { color: var(--teal); }
+
+  footer { text-align: center; color: var(--text-dim); font-size: 0.8rem; padding: 20px; position:relative; z-index:1; }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div id="chrome-bar">
+  <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+  <div class="url mono">https://sparkfeed.com</div>
+</div>
+
+<main>
+
+  <!-- ============ SCREEN 1: ONBOARDING ============ -->
+  <div class="screen active" id="screen-onboarding">
+    <div id="onboarding-card">
+      <h1>Welcome to SparkFeed</h1>
+      <p class="sub">An AI helper that gives you daily snippets on whatever sparks your curiosity. Tell us a bit about you to set up your briefing.</p>
+
+      <label for="in-name">Your name</label>
+      <input type="text" id="in-name" placeholder="e.g. Aarav">
+
+      <label for="in-grade">Your grade</label>
+      <input type="number" id="in-grade" placeholder="e.g. 7" min="1" max="12">
+
+      <label for="in-interest">What pulls you in?</label>
+      <input type="text" id="in-interest" placeholder="e.g. black holes, rockets, stars">
+
+      <label for="in-topic">Choose your interest area</label>
+      <select id="in-topic">
+        <option value="Astrophysics & Astrodynamics">Astrophysics &amp; Astrodynamics</option>
+      </select>
+      <p style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">More interest areas coming soon — this is our first one.</p>
+
+      <button class="btn-primary" onclick="startApp()">Start my briefing</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2: DASHBOARD ============ -->
+  <div class="screen" id="screen-dashboard">
+
+    <div class="greeting">
+      <span class="eyebrow mono" id="greet-track"></span>
+      <h1 id="greet-name"></h1>
+    </div>
+
+    <!-- Today's picture -->
+    <section class="panel">
+      <h2>Today's Picture — Live from NASA</h2>
+      <div id="apod-card"><div class="loading">Contacting NASA's servers…</div></div>
+    </section>
+
+    <!-- Vocabulary -->
+    <section class="panel">
+      <h2>5 New Words for Today</h2>
+      <div id="vocab-list"></div>
+    </section>
+
+    <!-- Quiz -->
+    <section class="panel">
+      <h2>Quick Quiz</h2>
+      <div id="quiz-list"></div>
+      <button class="btn-primary" onclick="gradeQuiz()">Check my answers</button>
+      <div id="quiz-score"></div>
+    </section>
+
+    <!-- Explore sites -->
+    <section class="panel">
+      <h2>Explore the Source Sites</h2>
+      <div class="site-tabs" id="site-tabs"></div>
+      <div id="site-frame-wrap">
+        <iframe id="site-frame" src="" title="site viewer"></iframe>
+      </div>
+      <div class="site-fallback">Some sites don't allow embedding for security reasons. If a page looks blank, use the link below to open it directly. <br><a id="site-direct-link" href="#" target="_blank">Open this site in a new tab →</a></div>
+    </section>
+
+  </div>
+
+</main>
+
+<footer class="mono">SparkFeed · Class 7 project prototype</footer>
+
+<script>
+  /* =========================================================
+     STARFIELD BACKGROUND
+     ========================================================= */
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = document.body.scrollHeight; }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  const stars = Array.from({ length: 140 }, () => ({
+    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+    r: Math.random() * 1.4 + 0.3, speed: Math.random() * 0.02 + 0.005, phase: Math.random() * Math.PI * 2
+  }));
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const twinkle = 0.5 + 0.5 * Math.sin(t * s.speed + s.phase);
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(233,234,242,${twinkle})`; ctx.fill();
+    });
+    requestAnimationFrame(drawStars);
+  }
+  requestAnimationFrame(drawStars);
+
+  /* =========================================================
+     APP STATE (kept in memory only — resets if page reloads)
+     ========================================================= */
+  let userData = { name: "", grade: "", interest: "", topic: "" };
+  let todaysVocab = [];
+  let todaysQuiz = [];
+
+  /* =========================================================
+     VOCABULARY BANK — rotates 5 new words each day
+     ========================================================= */
+  const vocabBank = [
+    { word: "Perigee", def: "The point in an orbit where an object is closest to Earth." },
+    { word: "Apogee", def: "The point in an orbit where an object is farthest from Earth." },
+    { word: "Delta-v", def: "The change in velocity needed to carry out a maneuver, like a rocket burn." },
+    { word: "Redshift", def: "When light from a moving-away object stretches toward red, showing it's receding." },
+    { word: "Escape velocity", def: "The minimum speed needed to break free of a planet's gravity." },
+    { word: "Light-year", def: "The distance light travels in one year — a unit for measuring space distances." },
+    { word: "Event horizon", def: "The boundary around a black hole beyond which nothing can escape." },
+    { word: "Hohmann transfer", def: "An efficient orbital maneuver that moves a spacecraft between two orbits." },
+    { word: "Orbital inclination", def: "The tilt of an orbit's plane compared to a reference plane." },
+    { word: "Parallax", def: "The apparent shift in a star's position used to measure its distance." },
+    { word: "Supernova", def: "The explosive death of a massive star." },
+    { word: "Neutron star", def: "The extremely dense collapsed core left after a supernova." },
+    { word: "Exoplanet", def: "A planet that orbits a star outside our solar system." },
+    { word: "Gravitational lensing", def: "The bending of light around massive objects, predicted by general relativity." },
+    { word: "Aphelion", def: "The point in an orbit where an object is farthest from the Sun." },
+    { word: "Perihelion", def: "The point in an orbit where an object is closest to the Sun." },
+    { word: "Dark matter", def: "An invisible substance that doesn't emit light but affects gravity in the universe." },
+    { word: "Accretion disk", def: "A spinning disk of gas and dust that swirls into a star or black hole." },
+    { word: "Solar wind", def: "A stream of charged particles released from the Sun's upper atmosphere." },
+    { word: "Geostationary orbit", def: "An orbit where a satellite stays fixed over the same spot on Earth." }
+  ];
+
+  function getTodaysWords() {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+    const start = dayOfYear % vocabBank.length;
+    const picked = [];
+    for (let i = 0; i < 5; i++) picked.push(vocabBank[(start + i) % vocabBank.length]);
+    return picked;
+  }
+
+  function renderVocab() {
+    todaysVocab = getTodaysWords();
+    const list = document.getElementById('vocab-list');
+    list.innerHTML = todaysVocab.map(v => `
+      <div class="vocab-item">
+        <span class="vocab-word">${v.word}</span>
+        <div class="vocab-def">${v.def}</div>
+      </div>
+    `).join('');
+  }
+
+  /* =========================================================
+     QUIZ — built from today's 5 words + 1 question about NASA's photo
+     ========================================================= */
+  function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+  function buildQuizFromVocab() {
+    todaysQuiz = todaysVocab.map(v => {
+      const distractors = shuffle(vocabBank.filter(x => x.word !== v.word)).slice(0, 3).map(x => x.word);
+      const options = shuffle([v.word, ...distractors]);
+      return { prompt: v.def, options, correct: v.word };
+    });
+    renderQuiz();
+  }
+
+  function addApodQuizQuestion(apodTitle) {
+    if (!apodTitle) return;
+    const fakeTitles = ["The Whirlpool Galaxy", "A Martian Dust Devil", "Aurora Over Iceland", "The Orion Nebula"];
+    const options = shuffle([apodTitle, ...shuffle(fakeTitles).slice(0,3)]);
+    todaysQuiz.push({ prompt: "What is today's NASA Astronomy Picture of the Day called?", options, correct: apodTitle });
+    renderQuiz();
+  }
+
+  function renderQuiz() {
+    const list = document.getElementById('quiz-list');
+    list.innerHTML = todaysQuiz.map((q, i) => `
+      <div class="quiz-q" data-qindex="${i}">
+        <p class="prompt">${i+1}. ${q.prompt}</p>
+        ${q.options.map(opt => `<div class="quiz-opt" onclick="selectOption(${i}, this)">${opt}</div>`).join('')}
+      </div>
+    `).join('');
+  }
+
+  function selectOption(qIndex, el) {
+    const qDiv = el.parentElement;
+    qDiv.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    el.dataset.chosen = "true";
+  }
+
+  function gradeQuiz() {
+    let score = 0;
+    document.querySelectorAll('.quiz-q').forEach((qDiv, i) => {
+      const correct = todaysQuiz[i].correct;
+      qDiv.querySelectorAll('.quiz-opt').forEach(opt => {
+        const isSelected = opt.classList.contains('selected');
+        if (opt.textContent === correct) opt.classList.add('correct');
+        else if (isSelected) opt.classList.add('incorrect');
+      });
+      const selected = qDiv.querySelector('.quiz-opt.selected');
+      if (selected && selected.textContent === correct) score++;
+    });
+    document.getElementById('quiz-score').textContent = `You scored ${score} out of ${todaysQuiz.length}.`;
+  }
+
+  /* =========================================================
+     NASA APOD — live fetch
+     ========================================================= */
+  const NASA_API_KEY = "DEMO_KEY"; // replace with your own free key from api.nasa.gov
+
+  function loadApod() {
+    const card = document.getElementById('apod-card');
+    fetch(`https://api.nasa.gov/planetary/apod?api_key=${NASA_API_KEY}`)
+      .then(r => { if (!r.ok) throw new Error("NASA API failed"); return r.json(); })
+      .then(data => {
+        const media = data.media_type === "video"
+          ? `<iframe src="${data.url}" allowfullscreen></iframe>`
+          : `<img src="${data.url}" alt="${data.title}">`;
+        card.innerHTML = `
+          ${media}
+          <h3 id="apod-title">${data.title}</h3>
+          <span id="apod-date" class="mono">${data.date}</span>
+          <p id="apod-explanation">${data.explanation}</p>
+        `;
+        addApodQuizQuestion(data.title);
+      })
+      .catch(err => {
+        card.innerHTML = `<div class="error">Couldn't load today's picture — NASA's shared demo key has a limited number of free requests per hour. Try again shortly, or add your own free key from api.nasa.gov.</div>`;
+        console.error(err);
+      });
+  }
+
+  /* =========================================================
+     EXPLORE SITES (embedded viewer)
+     ========================================================= */
+  const sites = [
+    { name: "NASA", url: "https://www.nasa.gov" },
+    { name: "ESA", url: "https://www.esa.int" },
+    { name: "ISRO", url: "https://www.isro.gov.in" },
+    { name: "JPL", url: "https://www.jpl.nasa.gov" }
+  ];
+
+  function renderSiteTabs() {
+    const tabWrap = document.getElementById('site-tabs');
+    tabWrap.innerHTML = sites.map((s, i) => `<button class="site-tab ${i===0?'active':''}" onclick="loadSite(${i}, this)">${s.name}</button>`).join('');
+    loadSite(0, tabWrap.firstElementChild);
+  }
+
+  function loadSite(i, btnEl) {
+    document.querySelectorAll('.site-tab').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    const site = sites[i];
+    document.getElementById('site-frame').src = site.url;
+    document.getElementById('site-direct-link').href = site.url;
+  }
+
+  /* =========================================================
+     STARTING THE APP FROM ONBOARDING
+     ========================================================= */
+  function startApp() {
+    const name = document.getElementById('in-name').value.trim();
+    const grade = document.getElementById('in-grade').value.trim();
+    const interest = document.getElementById('in-interest').value.trim();
+    const topic = document.getElementById('in-topic').value;
+
+    if (!name) { alert("Please enter your name to continue."); return; }
+
+    userData = { name, grade, interest, topic };
+
+    document.getElementById('greet-track').textContent = `Track: ${topic}`;
+    document.getElementById('greet-name').textContent = `Good to see you, ${name}.`;
+
+    document.getElementById('screen-onboarding').classList.remove('active');
+    document.getElementById('screen-dashboard').classList.add('active');
+
+    loadApod();
+    renderVocab();
+    buildQuizFromVocab();
+    renderSiteTabs();
+  }
+</script>
+
+</body>
+</html>

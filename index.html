@@ -32,7 +32,6 @@
     position: fixed; top:0; left:0; width:100%; height:100%;
     z-index: 0; pointer-events: none;
   }
-
   #chrome-bar {
     position: relative; z-index: 2;
     display: flex; align-items: center; gap: 10px;
@@ -55,12 +54,9 @@
     flex: 1;
     max-width: 320px;
   }
-
   main { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 40px 20px 100px; }
-
   .screen { display: none; }
   .screen.active { display: block; }
-
   #onboarding-card {
     background: var(--bg-panel);
     border: 1px solid var(--line);
@@ -68,11 +64,8 @@
     padding: 40px 32px;
     margin-top: 40px;
   }
-  #onboarding-card h1 {
-    font-size: 2rem; margin: 0 0 6px;
-  }
+  #onboarding-card h1 { font-size: 2rem; margin: 0 0 6px; }
   #onboarding-card p.sub { color: var(--text-dim); margin: 0 0 32px; font-size: 0.95rem; }
-
   label {
     display: block;
     font-family: 'Courier New', monospace;
@@ -94,7 +87,6 @@
     border-radius: 4px;
   }
   input:focus, select:focus { outline: 2px solid var(--gold); }
-
   button {
     cursor: pointer;
     font-family: 'Courier New', monospace;
@@ -104,24 +96,13 @@
     padding: 12px 22px;
     font-size: 0.85rem;
   }
-  .btn-primary {
-    background: var(--gold);
-    color: #1a1408;
-    margin-top: 28px;
-    width: 100%;
-  }
+  .btn-primary { background: var(--gold); color: #1a1408; margin-top: 28px; width: 100%; }
   .btn-primary:hover { background: #f5d691; }
-  .btn-ghost {
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--text-main);
-  }
+  .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--text-main); }
   .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
-
   .greeting { margin-bottom: 40px; }
   .greeting .eyebrow { color: var(--teal); font-size: 0.75rem; text-transform: uppercase; }
   .greeting h1 { margin: 6px 0 0; font-size: 1.9rem; }
-
   section.panel {
     background: var(--bg-panel);
     border: 1px solid var(--line);
@@ -130,71 +111,50 @@
     margin-bottom: 32px;
   }
   section.panel > h2 {
-    font-size: 1.1rem; margin: 0 0 18px;
-    font-weight: normal;
-    color: var(--gold);
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 12px;
+    font-size: 1.1rem; margin: 0 0 18px; font-weight: normal;
+    color: var(--gold); border-bottom: 1px solid var(--line); padding-bottom: 12px;
   }
-
   #apod-card img, #apod-card iframe { width: 100%; border-radius: 4px; aspect-ratio: 16/9; border:none; display:block; }
   #apod-title { color: var(--gold); font-size: 1.2rem; margin: 14px 0 4px; }
   #apod-date { font-size: 0.75rem; color: var(--text-dim); }
   #apod-explanation { margin-top: 10px; font-size: 0.95rem; }
   .loading, .error { color: var(--text-dim); font-style: italic; padding: 20px 0; }
-
-  .vocab-item {
-    border-bottom: 1px solid var(--line);
-    padding: 14px 0;
-  }
+  .vocab-item { border-bottom: 1px solid var(--line); padding: 14px 0; }
   .vocab-item:last-child { border-bottom: none; }
   .vocab-word { color: var(--coral); font-size: 1.05rem; margin-right: 8px; }
   .vocab-def { color: var(--text-dim); font-size: 0.92rem; }
-
   .quiz-q { margin-bottom: 22px; }
   .quiz-q p.prompt { margin: 0 0 10px; font-size: 0.98rem; }
   .quiz-opt {
-    display: block;
-    background: var(--bg-panel-2);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    font-size: 0.92rem;
+    display: block; background: var(--bg-panel-2); border: 1px solid var(--line);
+    border-radius: 4px; padding: 10px 14px; margin-bottom: 8px; cursor: pointer; font-size: 0.92rem;
   }
   .quiz-opt:hover { border-color: var(--teal); }
   .quiz-opt.selected { border-color: var(--gold); background: #1d2038; }
   .quiz-opt.correct { border-color: var(--teal); background: #12312d; }
   .quiz-opt.incorrect { border-color: var(--coral); background: #331d1a; }
   #quiz-score { font-size: 1rem; color: var(--gold); margin-top: 10px; }
-
   .site-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-  .site-tab {
-    background: var(--bg-panel-2);
-    border: 1px solid var(--line);
-    color: var(--text-dim);
-  }
+  .site-tab { background: var(--bg-panel-2); border: 1px solid var(--line); color: var(--text-dim); }
   .site-tab.active { border-color: var(--gold); color: var(--gold); }
-  #site-frame-wrap {
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    overflow: hidden;
-    background: #05070F;
-  }
+  #site-frame-wrap { border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #05070F; }
   #site-frame { width: 100%; height: 420px; border: none; display:block; }
-  .site-fallback {
-    padding: 14px;
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    text-align: center;
-  }
+  .site-fallback { padding: 14px; font-size: 0.85rem; color: var(--text-dim); text-align: center; }
   .site-fallback a { color: var(--teal); }
-
   footer { text-align: center; color: var(--text-dim); font-size: 0.8rem; padding: 20px; position:relative; z-index:1; }
 </style>
 </head>
 <body>
+
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+<form id="google-signup-form"
+      action="https://docs.google.com/forms/d/e/1FAIpQLScABb8ATIuAbTXwrgpnI03jfzC5t37et9ID5yFZzGTRdOhnAw/formResponse"
+      method="POST" target="hidden_iframe" style="display:none;">
+  <input type="text" name="entry.2082234601" id="hidden-name">
+  <input type="text" name="entry.74053367" id="hidden-grade">
+  <input type="text" name="entry.818917266" id="hidden-email">
+  <input type="text" name="entry.1745431282" id="hidden-interest">
+</form>
 
 <canvas id="stars"></canvas>
 
@@ -441,19 +401,11 @@
   const ENTRY_INTEREST = "entry.1745431282";
 
   function saveSignupToGoogleForm(name, grade, email, topic) {
-    const formUrl = `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/formResponse`;
-    const params = new URLSearchParams();
-    params.append(ENTRY_NAME, name);
-    params.append(ENTRY_GRADE, grade);
-    params.append(ENTRY_EMAIL, email);
-    params.append(ENTRY_INTEREST, topic);
-
-    fetch(formUrl, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString()
-    }).catch(err => console.error("Signup save failed:", err));
+    document.getElementById('hidden-name').value = name;
+    document.getElementById('hidden-grade').value = grade;
+    document.getElementById('hidden-email').value = email;
+    document.getElementById('hidden-interest').value = topic;
+    document.getElementById('google-signup-form').submit();
   }
 
   function startApp() {

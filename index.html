@@ -33,7 +33,6 @@
     z-index: 0; pointer-events: none;
   }
 
-  /* ---------- fake browser chrome (branding, not a live link) ---------- */
   #chrome-bar {
     position: relative; z-index: 2;
     display: flex; align-items: center; gap: 10px;
@@ -62,7 +61,6 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* ---------- onboarding ---------- */
   #onboarding-card {
     background: var(--bg-panel);
     border: 1px solid var(--line);
@@ -120,7 +118,6 @@
   }
   .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
 
-  /* ---------- dashboard ---------- */
   .greeting { margin-bottom: 40px; }
   .greeting .eyebrow { color: var(--teal); font-size: 0.75rem; text-transform: uppercase; }
   .greeting h1 { margin: 6px 0 0; font-size: 1.9rem; }
@@ -208,7 +205,6 @@
 
 <main>
 
-  <!-- ============ SCREEN 1: ONBOARDING ============ -->
   <div class="screen active" id="screen-onboarding">
     <div id="onboarding-card">
       <h1>Welcome to SparkFeed</h1>
@@ -223,6 +219,9 @@
       <label for="in-interest">What pulls you in?</label>
       <input type="text" id="in-interest" placeholder="e.g. black holes, rockets, stars">
 
+      <label for="in-email">Your email (for daily briefings)</label>
+      <input type="text" id="in-email" placeholder="e.g. aarav@email.com">
+
       <label for="in-topic">Choose your interest area</label>
       <select id="in-topic">
         <option value="Astrophysics & Astrodynamics">Astrophysics &amp; Astrodynamics</option>
@@ -233,7 +232,6 @@
     </div>
   </div>
 
-  <!-- ============ SCREEN 2: DASHBOARD ============ -->
   <div class="screen" id="screen-dashboard">
 
     <div class="greeting">
@@ -241,19 +239,16 @@
       <h1 id="greet-name"></h1>
     </div>
 
-    <!-- Today's picture -->
     <section class="panel">
       <h2>Today's Picture — Live from NASA</h2>
       <div id="apod-card"><div class="loading">Contacting NASA's servers…</div></div>
     </section>
 
-    <!-- Vocabulary -->
     <section class="panel">
       <h2>5 New Words for Today</h2>
       <div id="vocab-list"></div>
     </section>
 
-    <!-- Quiz -->
     <section class="panel">
       <h2>Quick Quiz</h2>
       <div id="quiz-list"></div>
@@ -261,7 +256,6 @@
       <div id="quiz-score"></div>
     </section>
 
-    <!-- Explore sites -->
     <section class="panel">
       <h2>Explore the Source Sites</h2>
       <div class="site-tabs" id="site-tabs"></div>
@@ -278,9 +272,6 @@
 <footer class="mono">SparkFeed · Class 7 project prototype</footer>
 
 <script>
-  /* =========================================================
-     STARFIELD BACKGROUND
-     ========================================================= */
   const canvas = document.getElementById('stars');
   const ctx = canvas.getContext('2d');
   function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = document.body.scrollHeight; }
@@ -301,16 +292,10 @@
   }
   requestAnimationFrame(drawStars);
 
-  /* =========================================================
-     APP STATE (kept in memory only — resets if page reloads)
-     ========================================================= */
   let userData = { name: "", grade: "", interest: "", topic: "" };
   let todaysVocab = [];
   let todaysQuiz = [];
 
-  /* =========================================================
-     VOCABULARY BANK — rotates 5 new words each day
-     ========================================================= */
   const vocabBank = [
     { word: "Perigee", def: "The point in an orbit where an object is closest to Earth." },
     { word: "Apogee", def: "The point in an orbit where an object is farthest from Earth." },
@@ -353,9 +338,6 @@
     `).join('');
   }
 
-  /* =========================================================
-     QUIZ — built from today's 5 words + 1 question about NASA's photo
-     ========================================================= */
   function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
   function buildQuizFromVocab() {
@@ -407,10 +389,7 @@
     document.getElementById('quiz-score').textContent = `You scored ${score} out of ${todaysQuiz.length}.`;
   }
 
-  /* =========================================================
-     NASA APOD — live fetch
-     ========================================================= */
-  const NASA_API_KEY = "DEMO_KEY"; // replace with your own free key from api.nasa.gov
+  const NASA_API_KEY = "DEMO_KEY";
 
   function loadApod() {
     const card = document.getElementById('apod-card');
@@ -434,9 +413,6 @@
       });
   }
 
-  /* =========================================================
-     EXPLORE SITES (embedded viewer)
-     ========================================================= */
   const sites = [
     { name: "NASA", url: "https://www.nasa.gov" },
     { name: "ESA", url: "https://www.esa.int" },
@@ -458,18 +434,41 @@
     document.getElementById('site-direct-link').href = site.url;
   }
 
-  /* =========================================================
-     STARTING THE APP FROM ONBOARDING
-     ========================================================= */
+  const GOOGLE_FORM_ID = "1FAIpQLScABb8ATIuAbTXwrgpnI03jfzC5t37et9ID5yFZzGTRdOhnAw";
+  const ENTRY_NAME = "entry.2082234601";
+  const ENTRY_GRADE = "entry.74053367";
+  const ENTRY_EMAIL = "entry.818917266";
+  const ENTRY_INTEREST = "entry.1745431282";
+
+  function saveSignupToGoogleForm(name, grade, email, topic) {
+    const formUrl = `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/formResponse`;
+    const params = new URLSearchParams();
+    params.append(ENTRY_NAME, name);
+    params.append(ENTRY_GRADE, grade);
+    params.append(ENTRY_EMAIL, email);
+    params.append(ENTRY_INTEREST, topic);
+
+    fetch(formUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
+    }).catch(err => console.error("Signup save failed:", err));
+  }
+
   function startApp() {
     const name = document.getElementById('in-name').value.trim();
     const grade = document.getElementById('in-grade').value.trim();
+    const email = document.getElementById('in-email').value.trim();
     const interest = document.getElementById('in-interest').value.trim();
     const topic = document.getElementById('in-topic').value;
 
     if (!name) { alert("Please enter your name to continue."); return; }
+    if (!email || !email.includes('@')) { alert("Please enter a valid email so we can send your daily briefing."); return; }
 
-    userData = { name, grade, interest, topic };
+    userData = { name, grade, email, interest, topic };
+
+    saveSignupToGoogleForm(name, grade, email, topic);
 
     document.getElementById('greet-track').textContent = `Track: ${topic}`;
     document.getElementById('greet-name').textContent = `Good to see you, ${name}.`;

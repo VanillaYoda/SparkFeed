@@ -33,6 +33,8 @@
       var(--bg-deep);
   }
 
+  /* Once someone enters the dashboard for a topic, switch to a clean,
+     focused black background — easier to read content against. */
   body.theme-dashboard {
     background: #000000;
   }
@@ -45,6 +47,7 @@
     z-index: 0; pointer-events: none;
   }
 
+  /* ---------- fake browser chrome (branding, not a live link) ---------- */
   #chrome-bar {
     position: relative; z-index: 2;
     display: flex; align-items: center; gap: 10px;
@@ -73,6 +76,7 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
+  /* ---------- onboarding ---------- */
   #onboarding-card {
     background: var(--bg-panel);
     border: 1px solid var(--line);
@@ -137,6 +141,7 @@
   }
   .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
 
+  /* ---------- dashboard ---------- */
   .greeting { margin-bottom: 40px; }
   .greeting .eyebrow { color: var(--teal); font-size: 0.75rem; text-transform: uppercase; }
   .greeting h1 { margin: 6px 0 0; font-size: 1.9rem; }
@@ -224,6 +229,7 @@
 
 <main>
 
+  <!-- ============ SCREEN 1: ONBOARDING ============ -->
   <div class="screen active" id="screen-onboarding">
     <div id="onboarding-card">
       <div style="text-align:center; margin-bottom:8px;">
@@ -242,6 +248,7 @@
         <div style="font-size:0.9rem; color:var(--text-main);">🧠 Quick quizzes to lock it in</div>
       </div>
 
+      <!-- Step 1: Sign in -->
       <div id="signin-step">
         <div id="g_id_onload"
              data-client_id="248913349435-29ivjighu7fllsjep0pmuihqek4g67hg.apps.googleusercontent.com"
@@ -250,6 +257,7 @@
         <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-width="100%"></div>
       </div>
 
+      <!-- Step 2: shown only after signing in -->
       <div id="details-step" style="display:none;">
         <p id="signed-in-as" style="color:var(--teal); font-size:0.85rem; margin-top:20px;"></p>
 
@@ -270,6 +278,7 @@
     </div>
   </div>
 
+  <!-- ============ SCREEN 2: DASHBOARD ============ -->
   <div class="screen" id="screen-dashboard">
 
     <div class="greeting" style="display:flex; justify-content:space-between; align-items:flex-start; position:relative;">
@@ -308,16 +317,19 @@
       </div>
     </div>
 
+    <!-- Today's picture -->
     <section class="panel">
       <h2>Today's Highlight — From Trusted Sources</h2>
       <div id="apod-card"><div class="loading">Fetching today's content…</div></div>
     </section>
 
+    <!-- Vocabulary -->
     <section class="panel">
-      <h2>5 New Words for Today</h2>
+      <h2>5 New Words for Today <span id="difficulty-badge" class="mono" style="font-size:0.7rem; color:var(--teal); border:1px solid var(--line); border-radius:12px; padding:3px 10px; margin-left:8px; vertical-align:middle;"></span></h2>
       <div id="vocab-list"></div>
     </section>
 
+    <!-- Quiz -->
     <section class="panel">
       <h2>Quick Quiz</h2>
       <div id="quiz-list"></div>
@@ -325,6 +337,7 @@
       <div id="quiz-score"></div>
     </section>
 
+    <!-- Explore sites -->
     <section class="panel">
       <h2>Explore the Source Sites</h2>
       <div class="site-tabs" id="site-tabs"></div>
@@ -349,6 +362,9 @@
 </footer>
 
 <script>
+  /* =========================================================
+     STARFIELD BACKGROUND
+     ========================================================= */
   const canvas = document.getElementById('stars');
   const ctx = canvas.getContext('2d');
   function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = document.body.scrollHeight; }
@@ -371,38 +387,433 @@
   }
   requestAnimationFrame(drawStars);
 
+  /* =========================================================
+     APP STATE (kept in memory only — resets if page reloads)
+     ========================================================= */
   let userData = { name: "", grade: "", interest: "", topic: "" };
   let todaysVocab = [];
   let todaysQuiz = [];
 
-  const vocabBank = [
+  /* =========================================================
+     VOCABULARY BANK — rotates 5 new words each day
+     ========================================================= */
+  /* 9 buckets total: 3 main bands (Foundational/Core/Advanced),
+     each split into Easy/Medium/Hard sub-difficulties by exact grade.
+     No AI involved — this is a free, fully self-contained word bank. */
+
+  const foundationalEasy = [
+    { word: "Star", def: "A giant ball of burning gas that gives off light and heat, like our Sun." },
+    { word: "Planet", def: "A large round object that circles a star and doesn't make its own light." },
+    { word: "Sun", def: "The star at the center of our Solar System that gives Earth light and heat." },
+    { word: "Moon", def: "A natural object that circles a planet, like Earth's Moon." },
+    { word: "Rocket", def: "A vehicle with powerful engines used to launch into space." },
+    { word: "Space", def: "The area beyond Earth's air where stars and planets exist." },
+    { word: "Astronaut", def: "A person trained to travel and work in space." },
+    { word: "Sky", def: "The area above Earth where we see clouds, the Sun, and stars at night." },
+    { word: "Earth", def: "The planet we live on, third from the Sun." },
+    { word: "Night", def: "The time when our side of Earth faces away from the Sun, making it dark." },
+    { word: "Day", def: "The time when our side of Earth faces the Sun, making it light." },
+    { word: "Cloud", def: "Fluffy white or gray shapes in the sky made of tiny water droplets." },
+    { word: "Spaceship", def: "A vehicle that carries people or things through space." },
+    { word: "Alien", def: "An imaginary or possible creature that might live on another planet." },
+    { word: "Telescope", def: "A tool that helps us see faraway things in space, like stars." },
+    { word: "Launch", def: "When a rocket lifts off the ground and flies into space." },
+    { word: "Gravity", def: "An invisible pull that keeps us on the ground and holds planets in place." },
+    { word: "Twinkle", def: "The sparkly flickering look of stars seen from Earth." },
+    { word: "Orbit", def: "The path something takes as it goes around another object in space." },
+    { word: "Satellite", def: "An object that circles a planet, like a moon or a man-made machine." },
+    { word: "Spacesuit", def: "Special clothing astronauts wear to breathe and stay safe in space." },
+    { word: "Countdown", def: "Counting backward from a number to zero before a rocket launches." },
+    { word: "Weightless", def: "Feeling like you have no weight, like astronauts do in space." },
+    { word: "Comet", def: "A ball of ice and dust that grows a bright tail near the Sun." },
+    { word: "Shooting star", def: "A streak of light seen when a small rock burns up in the sky." },
+    { word: "Solar System", def: "The Sun and all the planets and moons that circle around it." },
+    { word: "Universe", def: "Everything that exists, including all stars, planets, and galaxies." },
+    { word: "Galaxy", def: "A huge group of stars, dust, and gas held together by gravity." },
+    { word: "Full Moon", def: "When the Moon looks like a complete, bright circle in the sky." },
+    { word: "New Moon", def: "When the Moon looks completely dark because we can't see its lit side." },
+    { word: "Crater", def: "A bowl-shaped dent on a moon or planet, often made by a crash." },
+    { word: "Rover", def: "A vehicle that drives around and explores the surface of another planet." },
+    { word: "Mission", def: "A planned trip or job, like sending astronauts or a rover to space." },
+    { word: "Launch pad", def: "The platform a rocket stands on and takes off from." },
+    { word: "Fuel", def: "The substance that a rocket burns to create the power to fly." },
+    { word: "Orbit path", def: "The invisible circular or oval track that a planet or moon follows." },
+    { word: "Space station", def: "A large spacecraft where astronauts live and work for a long time." },
+    { word: "Solar", def: "Anything related to or coming from the Sun." },
+    { word: "North Star", def: "A bright star used long ago to help sailors find direction." },
+    { word: "Milky Way", def: "The galaxy that contains our Solar System and Earth." }
+  ];
+
+  const foundationalMedium = [
+    { word: "Orbit", def: "The curved path an object follows as it travels around another object in space." },
+    { word: "Galaxy", def: "A huge group of stars, dust, and gas held together by gravity." },
+    { word: "Solar System", def: "The Sun and everything that travels around it, like planets and moons." },
+    { word: "Telescope", def: "A tool that helps us see faraway objects in space more clearly." },
+    { word: "Astronaut", def: "A person trained to travel and work in space." },
+    { word: "Satellite", def: "An object that orbits a planet, either natural like a moon or man-made." },
+    { word: "Atmosphere", def: "The layer of gases surrounding a planet, like the air around Earth." },
+    { word: "Axis", def: "An imaginary line a planet spins around." },
+    { word: "Rotation", def: "The spinning motion of a planet around its axis." },
+    { word: "Revolution", def: "One full trip a planet makes around the Sun." },
+    { word: "Equator", def: "An imaginary line around the middle of a planet, splitting it into two halves." },
+    { word: "Crater", def: "A bowl-shaped dent made when something crashes into a moon or planet." },
+    { word: "Nebula", def: "A giant cloud of gas and dust in space where stars can form." },
+    { word: "Space probe", def: "A robotic spacecraft sent to explore other planets or moons without people." },
+    { word: "Mission control", def: "The place on Earth where people guide and monitor a space mission." },
+    { word: "Booster", def: "A powerful rocket part that provides extra thrust during launch." },
+    { word: "Re-entry", def: "When a spacecraft comes back into Earth's atmosphere from space." },
+    { word: "Zero gravity", def: "A condition where objects and people appear to float, feeling weightless." },
+    { word: "Constellation", def: "A group of stars that forms a pattern or picture in the sky." },
+    { word: "Light", def: "Energy that travels from the Sun or stars and lets us see things." },
+    { word: "Dwarf planet", def: "A round space object that orbits the Sun but hasn't cleared its orbital path." },
+    { word: "Moon phase", def: "The changing shape of the Moon we see from Earth each night." },
+    { word: "Solar eclipse", def: "When the Moon passes between the Sun and Earth, blocking sunlight." },
+    { word: "Lunar eclipse", def: "When Earth passes between the Sun and Moon, casting a shadow on the Moon." },
+    { word: "Meteor shower", def: "Many meteors seen streaking across the sky in a short time." },
+    { word: "Asteroid belt", def: "A region between Mars and Jupiter filled with many asteroids." },
+    { word: "Space junk", def: "Old, broken pieces of satellites and equipment floating in space." },
+    { word: "Docking", def: "When two spacecraft connect together while in orbit." },
+    { word: "Orbital speed", def: "How fast an object must travel to stay in a stable orbit." },
+    { word: "Solar panel", def: "A device that turns sunlight into electricity, often used on spacecraft." },
+    { word: "Space station", def: "A large spacecraft where astronauts from many countries live and work." },
+    { word: "Command module", def: "The part of a spacecraft where astronauts control the mission." },
+    { word: "Thrust", def: "The forward force that pushes a rocket through the air and into space." },
+    { word: "Trajectory", def: "The path a spacecraft or rocket follows through space." },
+    { word: "Payload", def: "The cargo, like satellites or supplies, that a rocket carries into space." },
+    { word: "Habitable zone", def: "The distance from a star where a planet could have liquid water." },
+    { word: "Terrestrial planet", def: "A rocky planet like Earth, Mars, Venus, or Mercury." },
+    { word: "Gas giant", def: "A huge planet made mostly of gas, like Jupiter or Saturn." },
+    { word: "Star cluster", def: "A group of stars that are close together and formed around the same time." },
+    { word: "Interstellar", def: "Something that happens or exists between stars." }
+  ];
+
+  const foundationalHard = [
+    { word: "Comet", def: "A ball of ice and dust that grows a bright tail when it gets close to the Sun." },
+    { word: "Asteroid", def: "A rocky object, smaller than a planet, that travels around the Sun." },
+    { word: "Gravity", def: "The invisible force that pulls objects toward each other." },
+    { word: "Meteor", def: "A streak of light made when a small rock burns up in Earth's atmosphere." },
+    { word: "Constellation", def: "A group of stars forming a pattern or picture in the sky." },
+    { word: "Moon phase", def: "The changing shape of the Moon as seen from Earth." },
+    { word: "Rotation period", def: "The time it takes a planet to spin once on its axis." },
+    { word: "Orbital period", def: "The time it takes a planet to complete one trip around the Sun." },
+    { word: "Tilt", def: "The angle at which a planet leans on its axis, causing seasons." },
+    { word: "Magnetic field", def: "An invisible force field surrounding a planet that can deflect particles." },
+    { word: "Solar flare", def: "A sudden burst of energy and light from the Sun's surface." },
+    { word: "Aurora", def: "Colorful lights in the sky caused by particles from the Sun hitting Earth's atmosphere." },
+    { word: "Meteorite", def: "A meteor that survives falling through the atmosphere and lands on the ground." },
+    { word: "Interplanetary", def: "Something that travels or exists between planets." },
+    { word: "Space debris", def: "Broken pieces of satellites or rockets left orbiting Earth." },
+    { word: "Orbital decay", def: "When a satellite's orbit slowly shrinks due to friction with the atmosphere." },
+    { word: "Solar wind", def: "A stream of charged particles constantly released from the Sun." },
+    { word: "Cosmic ray", def: "High-energy particles from space that travel through the universe." },
+    { word: "Binary star", def: "A system where two stars orbit around each other." },
+    { word: "Red giant", def: "A huge, aging star that has expanded and cooled, glowing red." },
+    { word: "White dwarf", def: "The small, dense remains of a star after it has burned out." },
+    { word: "Protostar", def: "A young star still forming from a collapsing cloud of gas and dust." },
+    { word: "Stellar nursery", def: "A region in space, often within a nebula, where new stars are born." },
+    { word: "Habitable planet", def: "A planet with the right conditions to potentially support life." },
+    { word: "Space weather", def: "Changing conditions in space, like solar flares, that can affect Earth." },
+    { word: "Ecliptic", def: "The imaginary path the Sun appears to follow across the sky over a year." },
+    { word: "Zenith", def: "The point in the sky directly above an observer." },
+    { word: "Astronomical unit", def: "A unit of distance equal to the distance from Earth to the Sun." },
+    { word: "Parsec", def: "A large unit of distance used to measure distances to stars." },
+    { word: "Celestial body", def: "Any natural object in space, like a star, planet, or moon." },
+    { word: "Circumpolar star", def: "A star that never sets below the horizon from a given location." },
+    { word: "Retrograde motion", def: "When a planet appears to move backward in the sky from Earth's view." },
+    { word: "Solar cycle", def: "The roughly 11-year pattern of changing activity on the Sun's surface." },
+    { word: "Ionosphere", def: "A layer of Earth's atmosphere charged by solar radiation." },
+    { word: "Magnetosphere", def: "The region around a planet dominated by its magnetic field." },
+    { word: "Occultation", def: "When one celestial body passes in front of and hides another." },
+    { word: "Transit", def: "When a smaller celestial body passes in front of a larger one, like a planet crossing the Sun." },
+    { word: "Perturbation", def: "A small change in an object's orbit caused by the gravity of another body." },
+    { word: "Escape trajectory", def: "A path that allows a spacecraft to leave a planet's gravity entirely." },
+    { word: "Deep space", def: "The regions of space far beyond Earth's immediate neighborhood." }
+  ];
+
+  const coreEasy = [
     { word: "Perigee", def: "The point in an orbit where an object is closest to Earth." },
     { word: "Apogee", def: "The point in an orbit where an object is farthest from Earth." },
+    { word: "Light-year", def: "The distance light travels in one year, used to measure space distances." },
+    { word: "Exoplanet", def: "A planet that orbits a star outside our solar system." },
+    { word: "Supernova", def: "The explosive death of a massive star." },
+    { word: "Solar wind", def: "A stream of charged particles released from the Sun's upper atmosphere." },
+    { word: "Orbital velocity", def: "The speed needed for an object to maintain a stable orbit." },
+    { word: "Gravitational pull", def: "The force of attraction between two objects due to their mass." },
+    { word: "Space-time", def: "The combined framework of three-dimensional space and time in physics." },
+    { word: "Nuclear fusion", def: "The process that powers stars by combining atomic nuclei, releasing energy." },
+    { word: "Stellar evolution", def: "The life cycle of a star from formation to its eventual death." },
+    { word: "Main sequence star", def: "A star, like our Sun, that is stable and fusing hydrogen into helium." },
+    { word: "Interstellar medium", def: "The matter, mostly gas and dust, that exists between star systems." },
+    { word: "Circumstellar disk", def: "A disk of gas and dust surrounding a young star, where planets can form." },
+    { word: "Planetary nebula", def: "The glowing shell of gas expelled by a dying star." },
+    { word: "Black dwarf", def: "The theoretical final stage of a white dwarf after it cools completely." },
+    { word: "Tidal locking", def: "When a moon's rotation matches its orbit, so it always shows the same face." },
+    { word: "Hydrostatic equilibrium", def: "A balance between gravity pulling inward and pressure pushing outward in a star or planet." },
+    { word: "Roche limit", def: "The closest distance a moon can orbit a planet before being torn apart by tidal forces." },
+    { word: "Kepler's laws", def: "Rules describing how planets move in their orbits around the Sun." },
+    { word: "Circular orbit", def: "An orbit shaped like a perfect circle around a central body." },
+    { word: "Elliptical orbit", def: "An oval-shaped orbit that most planets and satellites actually follow." },
+    { word: "Orbital eccentricity", def: "A measure of how much an orbit deviates from being a perfect circle." },
+    { word: "Sidereal time", def: "Time measured based on the rotation of Earth relative to distant stars." },
+    { word: "Synodic period", def: "The time between two similar alignments of celestial bodies, like full moons." },
+    { word: "Cislunar space", def: "The region of space between Earth and the Moon's orbit." },
+    { word: "Delta-v budget", def: "The total change in velocity a spacecraft needs for its entire mission." },
+    { word: "Specific impulse", def: "A measure of how efficiently a rocket engine uses its fuel." },
+    { word: "Ion propulsion", def: "A spacecraft engine that uses electrically charged particles for thrust." },
+    { word: "Gravity assist", def: "Using a planet's gravity to change a spacecraft's speed and direction." },
+    { word: "Heliocentric", def: "Describing a system where the Sun is at the center, like our Solar System." },
+    { word: "Geocentric", def: "Describing a now-disproven model where Earth was thought to be the center of the universe." },
+    { word: "Circumbinary planet", def: "A planet that orbits two stars instead of one." },
+    { word: "Rogue planet", def: "A planet that doesn't orbit any star, drifting freely through space." },
+    { word: "Brown dwarf", def: "An object too large to be a planet but too small to sustain nuclear fusion like a star." },
+    { word: "Stellar parallax", def: "The apparent shift in a star's position due to Earth's motion, used to measure distance." },
+    { word: "Redshift survey", def: "A method astronomers use to map the distances and motions of galaxies." },
+    { word: "Cosmic distance ladder", def: "A series of methods astronomers use to measure increasingly distant objects." },
+    { word: "Habitable zone", def: "The region around a star where conditions might allow liquid water." },
+    { word: "Circumplanetary disk", def: "A disk of material around a planet from which moons can form." }
+  ];
+
+  const coreMedium = [
     { word: "Delta-v", def: "The change in velocity needed to carry out a maneuver, like a rocket burn." },
     { word: "Redshift", def: "When light from a moving-away object stretches toward red, showing it's receding." },
     { word: "Escape velocity", def: "The minimum speed needed to break free of a planet's gravity." },
-    { word: "Light-year", def: "The distance light travels in one year — a unit for measuring space distances." },
     { word: "Event horizon", def: "The boundary around a black hole beyond which nothing can escape." },
+    { word: "Neutron star", def: "The extremely dense collapsed core left after a supernova." },
+    { word: "Accretion disk", def: "A spinning disk of gas and dust that swirls into a star or black hole." },
+    { word: "Blueshift", def: "When light from an approaching object compresses toward blue wavelengths." },
+    { word: "Singularity", def: "A point of infinite density at the center of a black hole." },
+    { word: "Pulsar", def: "A rapidly spinning neutron star that emits regular pulses of radiation." },
+    { word: "Magnetar", def: "A type of neutron star with an extremely powerful magnetic field." },
+    { word: "Quasar", def: "An extremely bright, distant object powered by a supermassive black hole." },
+    { word: "Supermassive black hole", def: "An enormous black hole found at the center of most galaxies." },
+    { word: "Hawking radiation", def: "Theoretical radiation emitted by black holes due to quantum effects." },
+    { word: "Wormhole", def: "A theoretical tunnel through space-time connecting distant points." },
+    { word: "Gravitational time dilation", def: "The slowing of time experienced near a massive object due to gravity." },
+    { word: "Frame dragging", def: "The twisting of space-time caused by a rotating massive object." },
+    { word: "Photon sphere", def: "The region around a black hole where light can orbit in a circle." },
+    { word: "Innermost stable circular orbit", def: "The closest orbit a particle can safely maintain around a black hole." },
+    { word: "Tidal force", def: "The stretching effect caused by differences in gravitational pull across an object." },
+    { word: "Spaghettification", def: "The stretching of an object into a thin shape as it falls into a black hole." },
+    { word: "Cosmic inflation", def: "A brief period of extremely rapid expansion just after the Big Bang." },
+    { word: "Big Bang", def: "The event believed to mark the beginning of the universe's expansion." },
+    { word: "Cosmological constant", def: "A value representing the energy density of empty space in Einstein's equations." },
+    { word: "Hubble's law", def: "The observation that galaxies move away from us faster the farther they are." },
+    { word: "Critical density", def: "The average density of the universe that determines its ultimate fate." },
+    { word: "Flat universe", def: "A model in which the universe's overall geometry has no curvature." },
+    { word: "Open universe", def: "A model in which the universe is negatively curved and expands forever." },
+    { word: "Closed universe", def: "A model in which the universe is positively curved and could eventually collapse." },
+    { word: "Dark energy", def: "A mysterious force thought to be driving the accelerating expansion of the universe." },
+    { word: "Baryonic matter", def: "Ordinary matter made of protons and neutrons, as opposed to dark matter." },
+    { word: "Cosmic web", def: "The large-scale structure of the universe, made of galaxy clusters and filaments." },
+    { word: "Void", def: "A vast, mostly empty region of space between galaxy filaments." },
+    { word: "Galaxy cluster", def: "A large group of galaxies bound together by gravity." },
+    { word: "Supercluster", def: "An enormous structure made up of many galaxy clusters." },
+    { word: "Active galactic nucleus", def: "The extremely bright core of a galaxy powered by a supermassive black hole." },
+    { word: "Starburst galaxy", def: "A galaxy undergoing an unusually high rate of star formation." },
+    { word: "Elliptical galaxy", def: "A galaxy with a smooth, oval shape and little ongoing star formation." },
+    { word: "Spiral galaxy", def: "A galaxy with curved arms of stars and gas, like the Milky Way." },
+    { word: "Irregular galaxy", def: "A galaxy with no clear defined shape, often due to gravitational disruption." },
+    { word: "Galactic collision", def: "An event where two galaxies merge due to their mutual gravity." }
+  ];
+
+  const coreHard = [
     { word: "Hohmann transfer", def: "An efficient orbital maneuver that moves a spacecraft between two orbits." },
     { word: "Orbital inclination", def: "The tilt of an orbit's plane compared to a reference plane." },
     { word: "Parallax", def: "The apparent shift in a star's position used to measure its distance." },
-    { word: "Supernova", def: "The explosive death of a massive star." },
-    { word: "Neutron star", def: "The extremely dense collapsed core left after a supernova." },
-    { word: "Exoplanet", def: "A planet that orbits a star outside our solar system." },
-    { word: "Gravitational lensing", def: "The bending of light around massive objects, predicted by general relativity." },
     { word: "Aphelion", def: "The point in an orbit where an object is farthest from the Sun." },
     { word: "Perihelion", def: "The point in an orbit where an object is closest to the Sun." },
-    { word: "Dark matter", def: "An invisible substance that doesn't emit light but affects gravity in the universe." },
-    { word: "Accretion disk", def: "A spinning disk of gas and dust that swirls into a star or black hole." },
-    { word: "Solar wind", def: "A stream of charged particles released from the Sun's upper atmosphere." },
-    { word: "Geostationary orbit", def: "An orbit where a satellite stays fixed over the same spot on Earth." }
+    { word: "Geostationary orbit", def: "An orbit where a satellite stays fixed over the same spot on Earth." },
+    { word: "Lagrangian point", def: "A location in space where gravitational forces balance, allowing stable positioning." },
+    { word: "Bi-elliptic transfer", def: "An orbital maneuver using two transfer ellipses, sometimes more efficient than a Hohmann transfer." },
+    { word: "Orbital resonance", def: "A repeating pattern of gravitational influence between orbiting bodies." },
+    { word: "Sphere of influence", def: "The region around a celestial body where its gravity dominates over others." },
+    { word: "Patched conic approximation", def: "A method to simplify complex orbital trajectory calculations." },
+    { word: "Hyperbolic trajectory", def: "A path that allows a spacecraft to escape a body's gravity entirely." },
+    { word: "Parabolic trajectory", def: "An orbital path that is exactly at the boundary between escape and capture." },
+    { word: "Orbital maneuver", def: "Any planned change to a spacecraft's orbit or trajectory." },
+    { word: "Station keeping", def: "Small adjustments made to keep a satellite in its intended orbit." },
+    { word: "Delta-v map", def: "A chart showing the velocity changes needed to travel between destinations in space." },
+    { word: "Launch window", def: "The specific time period when a rocket must launch to reach its target." },
+    { word: "Synodic orbit", def: "An orbit defined relative to the alignment of two bodies, like Earth and Mars." },
+    { word: "Transfer orbit", def: "An intermediate orbit used to move a spacecraft from one orbit to another." },
+    { word: "Orbital plane", def: "The flat, two-dimensional surface in which an orbit lies." },
+    { word: "Right ascension", def: "A coordinate used to specify the position of objects in the sky, like celestial longitude." },
+    { word: "Declination", def: "A coordinate used to specify the position of objects in the sky, like celestial latitude." },
+    { word: "Ephemeris", def: "A table giving the calculated positions of celestial objects at specific times." },
+    { word: "Two-body problem", def: "A simplified model predicting the motion of two objects under mutual gravity." },
+    { word: "Three-body problem", def: "The much harder challenge of predicting motion when three objects interact gravitationally." },
+    { word: "Perturbation theory", def: "A mathematical method for approximating the effects of small gravitational disturbances." },
+    { word: "Osculating orbit", def: "The theoretical orbit an object would follow if all outside forces vanished at that instant." },
+    { word: "Orbital mechanics", def: "The branch of physics studying the motion of objects in space under gravity." },
+    { word: "Specific orbital energy", def: "A measure combining an object's kinetic and potential energy in orbit." },
+    { word: "Vis-viva equation", def: "A formula relating an orbiting object's speed to its position in orbit." },
+    { word: "Semi-major axis", def: "Half of the longest diameter of an elliptical orbit, describing its size." },
+    { word: "Orbital node", def: "A point where an orbit crosses a reference plane, like Earth's equator." },
+    { word: "Argument of periapsis", def: "An angle describing the orientation of an orbit's closest point." },
+    { word: "True anomaly", def: "An angle describing an object's current position along its orbit." },
+    { word: "Mean anomaly", def: "A mathematical angle used to describe an object's position over time in orbit." },
+    { word: "Sidereal period", def: "The time it takes an object to complete an orbit relative to distant stars." },
+    { word: "Orbital velocity vector", def: "A value describing both the speed and direction of an orbiting object." },
+    { word: "Gravitational parameter", def: "A value combining gravitational constant and mass, used in orbital calculations." },
+    { word: "Non-Keplerian orbit", def: "An orbit that doesn't follow simple two-body gravitational rules, due to added forces." },
+    { word: "Circular restricted three-body problem", def: "A simplified version of the three-body problem used to study spacecraft trajectories." }
   ];
+
+  const advancedEasy = [
+    { word: "Dark matter", def: "An invisible substance that doesn't emit light but affects gravity in the universe." },
+    { word: "Gravitational lensing", def: "The bending of light around massive objects, predicted by general relativity." },
+    { word: "Angular momentum", def: "A measure of rotational motion, conserved during orbital mechanics and stellar collapse." },
+    { word: "Spectroscopy", def: "Studying light spectra to determine a star or galaxy's composition, temperature, and motion." },
+    { word: "Lagrange point", def: "A location where two bodies' gravitational forces balance, letting an object stay in a stable position." },
+    { word: "General relativity", def: "Einstein's theory describing gravity as the curvature of spacetime caused by mass and energy." },
+    { word: "Special relativity", def: "Einstein's theory describing the relationship between space and time for objects in motion." },
+    { word: "Equivalence principle", def: "The idea that gravitational and inertial mass are indistinguishable, a foundation of general relativity." },
+    { word: "Geodesic", def: "The shortest path between two points in curved spacetime, followed by objects under gravity." },
+    { word: "Spacetime curvature", def: "The warping of the fabric of space and time caused by mass and energy." },
+    { word: "Photon", def: "A particle of light that carries electromagnetic energy." },
+    { word: "Electromagnetic spectrum", def: "The full range of light wavelengths, from radio waves to gamma rays." },
+    { word: "Doppler effect", def: "The change in wave frequency due to relative motion between source and observer." },
+    { word: "Blackbody radiation", def: "The theoretical light emitted by an object based purely on its temperature." },
+    { word: "Luminosity", def: "The total amount of energy a star emits per second." },
+    { word: "Apparent magnitude", def: "How bright a star appears from Earth, affected by distance." },
+    { word: "Absolute magnitude", def: "How bright a star would appear if placed at a standard distance, revealing true brightness." },
+    { word: "Hertzsprung-Russell diagram", def: "A chart plotting stars by brightness and temperature to study stellar evolution." },
+    { word: "Main sequence", def: "The stage where stars, like the Sun, steadily fuse hydrogen into helium." },
+    { word: "Stellar nucleosynthesis", def: "The process by which stars create heavier elements through nuclear fusion." },
+    { word: "Supernova remnant", def: "The expanding cloud of material left behind after a star explodes." },
+    { word: "Cosmic distance scale", def: "The system astronomers use to measure distances across the universe." },
+    { word: "Standard candle", def: "An astronomical object with known brightness, used to measure cosmic distances." },
+    { word: "Cepheid variable", def: "A type of pulsating star used as a standard candle for distance measurement." },
+    { word: "Type Ia supernova", def: "A specific supernova type used as a reliable standard candle in cosmology." },
+    { word: "Redshift-distance relationship", def: "The pattern showing that farther galaxies have greater redshift." },
+    { word: "Hubble constant", def: "A value describing the rate of expansion of the universe." },
+    { word: "Critical density", def: "The density of the universe needed for it to be geometrically flat." },
+    { word: "Dark matter halo", def: "The invisible mass surrounding galaxies, inferred from gravitational effects." },
+    { word: "Weak lensing", def: "Subtle distortions in the shapes of distant galaxies caused by intervening mass." },
+    { word: "Strong lensing", def: "Dramatic distortion or multiple imaging of distant objects due to a massive foreground body." },
+    { word: "Microlensing", def: "A temporary brightening of a star's light caused by a smaller object passing in front." },
+    { word: "Cosmic ray", def: "High-energy particles from space that travel through the universe." },
+    { word: "Neutrino", def: "A nearly massless particle that rarely interacts with matter, produced by stars and nuclear reactions." },
+    { word: "Fermi paradox", def: "The puzzling contradiction between the high probability of alien life and the lack of evidence for it." },
+    { word: "Drake equation", def: "A formula estimating the number of communicating civilizations in our galaxy." },
+    { word: "Habitable zone boundary", def: "The inner and outer limits of a star's zone where liquid water could exist." },
+    { word: "Biosignature", def: "A substance or pattern that could indicate the presence of life." },
+    { word: "Technosignature", def: "A signal or evidence that could indicate the presence of technology from another civilization." },
+    { word: "Astrobiology", def: "The study of the potential for life to exist elsewhere in the universe." }
+  ];
+
+  const advancedMedium = [
+    { word: "Chandrasekhar limit", def: "The maximum mass a white dwarf can have (about 1.4 solar masses) before collapsing further." },
+    { word: "Schwarzschild radius", def: "The radius at which an object's escape velocity equals light speed, defining a black hole's event horizon." },
+    { word: "Redshift-distance relation", def: "Hubble's discovery that farther galaxies recede faster, showing the universe is expanding." },
+    { word: "Degenerate matter", def: "Extremely dense matter, like in white dwarfs, where quantum effects resist further compression." },
+    { word: "Baryon acoustic oscillation", def: "Regular density patterns in the early universe, used as a cosmic ruler to measure distances." },
+    { word: "Cosmic microwave background", def: "The faint leftover radiation from the early universe, key evidence for the Big Bang." },
+    { word: "Electron degeneracy pressure", def: "The quantum pressure that supports white dwarfs against gravitational collapse." },
+    { word: "Neutron degeneracy pressure", def: "The quantum pressure that supports neutron stars against further collapse." },
+    { word: "Tolman-Oppenheimer-Volkoff limit", def: "The maximum mass a neutron star can have before collapsing into a black hole." },
+    { word: "Gravitational collapse", def: "The process by which a massive object collapses inward under its own gravity." },
+    { word: "Kerr black hole", def: "A rotating black hole described by a specific solution to Einstein's equations." },
+    { word: "Ergosphere", def: "A region outside a rotating black hole where space-time itself is dragged along." },
+    { word: "No-hair theorem", def: "The idea that a black hole can be fully described by just its mass, charge, and spin." },
+    { word: "Cosmic censorship hypothesis", def: "The idea that singularities are always hidden behind event horizons." },
+    { word: "Information paradox", def: "The puzzle of what happens to information that falls into a black hole." },
+    { word: "Quantum entanglement", def: "A phenomenon where particles remain connected regardless of distance, relevant to black hole physics." },
+    { word: "Vacuum energy", def: "The energy present in seemingly empty space, related to dark energy." },
+    { word: "Cosmological horizon", def: "The boundary beyond which light hasn't had time to reach us since the Big Bang." },
+    { word: "Observable universe", def: "The portion of the universe we can currently detect, limited by the speed of light." },
+    { word: "Cosmic inflation theory", def: "The model explaining the universe's extremely rapid early expansion." },
+    { word: "Multiverse hypothesis", def: "The theoretical idea that our universe might be one of many." },
+    { word: "String theory", def: "A theoretical framework proposing that particles are tiny vibrating strings." },
+    { word: "Supersymmetry", def: "A theoretical concept pairing each known particle with an undiscovered partner particle." },
+    { word: "Grand unified theory", def: "A theoretical framework attempting to combine three of the four fundamental forces." },
+    { word: "Theory of everything", def: "A hypothetical framework that would unify all fundamental forces, including gravity." },
+    { word: "Planck length", def: "The smallest meaningful length scale in physics, relevant to quantum gravity." },
+    { word: "Planck time", def: "The smallest meaningful unit of time, relevant to the earliest moments of the universe." },
+    { word: "Quantum foam", def: "A theoretical, turbulent structure of space-time at extremely small scales." },
+    { word: "Graviton", def: "A hypothetical particle thought to carry the force of gravity." },
+    { word: "Dark photon", def: "A theoretical particle proposed to mediate interactions within the dark sector." },
+    { word: "WIMP", def: "Weakly Interacting Massive Particle, a leading dark matter candidate." },
+    { word: "Axion", def: "A hypothetical low-mass particle proposed as another candidate for dark matter." },
+    { word: "Sterile neutrino", def: "A theoretical type of neutrino that doesn't interact via the weak force." },
+    { word: "Big Rip", def: "A hypothetical scenario where dark energy eventually tears the universe apart." },
+    { word: "Big Crunch", def: "A hypothetical scenario where the universe's expansion reverses and it collapses." },
+    { word: "Heat death", def: "A hypothetical end state of the universe where entropy is maximized and no work can be done." },
+    { word: "Entropy", def: "A measure of disorder in a system, always increasing according to the second law of thermodynamics." },
+    { word: "Arrow of time", def: "The concept that time appears to move in only one direction, tied to increasing entropy." },
+    { word: "Causal structure", def: "The framework describing which events can influence others in space-time." },
+    { word: "Anthropic principle", def: "The idea that observed physical constants may be explained by the necessity of life existing to observe them." }
+  ];
+
+  const advancedHard = [
+    { word: "Quantum gravity", def: "An unfinished theory attempting to unify general relativity with quantum mechanics." },
+    { word: "Holographic principle", def: "The idea that all information in a region of space can be described by data on its boundary." },
+    { word: "Inflationary cosmology", def: "The theory that the universe underwent an extremely rapid expansion just after the Big Bang." },
+    { word: "Gravitational wave", def: "Ripples in spacetime caused by massive accelerating objects, like merging black holes." },
+    { word: "Dark energy", def: "A mysterious force thought to be driving the accelerating expansion of the universe." },
+    { word: "Tidal disruption event", def: "When a star passes too close to a black hole and gets torn apart by tidal forces." },
+    { word: "Loop quantum gravity", def: "An approach to quantum gravity that treats space itself as made of discrete loops." },
+    { word: "AdS/CFT correspondence", def: "A theoretical duality relating gravity in one space to a quantum field theory on its boundary." },
+    { word: "Brane cosmology", def: "A theoretical framework suggesting our universe exists on a membrane within higher dimensions." },
+    { word: "Eternal inflation", def: "The idea that cosmic inflation, once started, never fully stops everywhere." },
+    { word: "False vacuum decay", def: "A hypothetical catastrophic event where the universe transitions to a lower energy state." },
+    { word: "Primordial black hole", def: "A theoretical black hole formed directly from density fluctuations in the early universe." },
+    { word: "Gravitational wave background", def: "A theoretical faint hum of gravitational waves from countless cosmic events." },
+    { word: "Binary black hole merger", def: "The collision and combination of two black holes, producing gravitational waves." },
+    { word: "LIGO", def: "A detector designed to observe gravitational waves using laser interferometry." },
+    { word: "Interferometry", def: "A technique using overlapping waves to measure extremely tiny changes, used in gravitational wave detection." },
+    { word: "Extremal black hole", def: "A theoretical black hole with the maximum possible charge or spin for its mass." },
+    { word: "Naked singularity", def: "A hypothetical singularity not hidden behind an event horizon." },
+    { word: "White hole", def: "A theoretical object that expels matter and energy, the time-reverse of a black hole." },
+    { word: "Wormhole traversability", def: "The theoretical question of whether a wormhole could allow safe passage through it." },
+    { word: "Casimir effect", def: "A quantum phenomenon where a force arises from vacuum fluctuations between close surfaces." },
+    { word: "Zero-point energy", def: "The lowest possible energy a quantum system can have, even at absolute zero." },
+    { word: "Renormalization", def: "A mathematical technique used to remove infinities from quantum field theory calculations." },
+    { word: "Effective field theory", def: "A simplified theoretical framework valid only within certain energy scales." },
+    { word: "Standard Model", def: "The well-tested theory describing fundamental particles and three of the four forces." },
+    { word: "Higgs mechanism", def: "The process by which particles acquire mass through interaction with the Higgs field." },
+    { word: "Symmetry breaking", def: "A process where a system's symmetric state becomes asymmetric, key to particle mass generation." },
+    { word: "CP violation", def: "A phenomenon where fundamental physics doesn't perfectly conserve charge-parity symmetry." },
+    { word: "Baryogenesis", def: "The theoretical process explaining why the universe has more matter than antimatter." },
+    { word: "Leptogenesis", def: "A theoretical mechanism explaining matter-antimatter asymmetry through lepton interactions." },
+    { word: "Cosmic string", def: "A hypothetical, extremely thin, dense defect in space-time left over from the early universe." },
+    { word: "Domain wall", def: "A theoretical boundary between regions of space with different vacuum states." },
+    { word: "Magnetic monopole", def: "A hypothetical particle with only one magnetic pole, predicted by some unified theories." },
+    { word: "Cosmic topology", def: "The study of the overall shape and connectivity of the universe." },
+    { word: "de Sitter space", def: "A model of space-time with a positive cosmological constant, used in inflation theory." },
+    { word: "Anti-de Sitter space", def: "A model of space-time with a negative cosmological constant, important in theoretical physics." },
+    { word: "Conformal field theory", def: "A type of quantum field theory used in advanced theoretical physics, including AdS/CFT." },
+    { word: "Supergravity", def: "A theoretical framework combining supersymmetry with general relativity." },
+    { word: "M-theory", def: "A unifying framework proposed to connect different versions of string theory." },
+    { word: "Cosmic censorship conjecture", def: "The unproven hypothesis that singularities are always hidden within black holes." }
+  ];
+
+  // Maps an exact grade to one of 9 buckets: 3 bands x 3 sub-difficulties
+  function getVocabBankForGrade(grade) {
+    const g = parseInt(grade, 10);
+    if (!g || isNaN(g)) return { bank: coreMedium, label: "Core · Medium" };
+
+    if (g <= 2) return { bank: foundationalEasy, label: "Foundational · Easy" };
+    if (g <= 4) return { bank: foundationalMedium, label: "Foundational · Medium" };
+    if (g === 5 || g === 6) return { bank: foundationalHard, label: "Foundational · Hard" };
+
+    if (g === 7) return { bank: coreEasy, label: "Core · Easy" };
+    if (g === 8) return { bank: coreMedium, label: "Core · Medium" };
+    if (g === 9) return { bank: coreHard, label: "Core · Hard" };
+
+    if (g === 10) return { bank: advancedEasy, label: "Advanced · Easy" };
+    if (g === 11) return { bank: advancedMedium, label: "Advanced · Medium" };
+    return { bank: advancedHard, label: "Advanced · Hard" }; // grade 12+
+  }
+
+  let currentVocabBank = coreMedium;
+  let currentDifficultyLabel = "Core · Medium";
 
   function getTodaysWords() {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
-    const start = dayOfYear % vocabBank.length;
+    const start = dayOfYear % currentVocabBank.length;
     const picked = [];
-    for (let i = 0; i < 5; i++) picked.push(vocabBank[(start + i) % vocabBank.length]);
+    for (let i = 0; i < 5; i++) picked.push(currentVocabBank[(start + i) % currentVocabBank.length]);
     return picked;
   }
 
@@ -415,13 +826,18 @@
         <div class="vocab-def">${v.def}</div>
       </div>
     `).join('');
+    const badge = document.getElementById('difficulty-badge');
+    if (badge) badge.textContent = currentDifficultyLabel;
   }
 
+  /* =========================================================
+     QUIZ — built from today's 5 words + 1 question about NASA's photo
+     ========================================================= */
   function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
   function buildQuizFromVocab() {
     todaysQuiz = todaysVocab.map(v => {
-      const distractors = shuffle(vocabBank.filter(x => x.word !== v.word)).slice(0, 3).map(x => x.word);
+      const distractors = shuffle(currentVocabBank.filter(x => x.word !== v.word)).slice(0, 3).map(x => x.word);
       const options = shuffle([v.word, ...distractors]);
       return { prompt: v.def, options, correct: v.word };
     });
@@ -468,7 +884,10 @@
     document.getElementById('quiz-score').textContent = `You scored ${score} out of ${todaysQuiz.length}.`;
   }
 
-  const NASA_API_KEY = "DEMO_KEY";
+  /* =========================================================
+     NASA APOD — live fetch
+     ========================================================= */
+  const NASA_API_KEY = "DEMO_KEY"; // replace with your own free key from api.nasa.gov
 
   function loadApod() {
     const card = document.getElementById('apod-card');
@@ -492,6 +911,9 @@
       });
   }
 
+  /* =========================================================
+     EXPLORE SITES (embedded viewer)
+     ========================================================= */
   const sites = [
     { name: "NASA", url: "https://www.nasa.gov" },
     { name: "ESA", url: "https://www.esa.int" },
@@ -513,10 +935,15 @@
     document.getElementById('site-direct-link').href = site.url;
   }
 
+  /* =========================================================
+     STARTING THE APP FROM ONBOARDING
+     ========================================================= */
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyRTpuZI4wXn1ipqrcZmy2s7PDCVuQ0ucLM2cJexG5ECw3437jdg7Ylv9usVoidRRnc4w/exec";
 
+  // Holds the signed-in Google user's info once they log in
   let googleUser = { name: "", email: "", picture: "" };
 
+  // Decodes the token Google sends back after sign-in, to read name/email/picture
   function parseJwt(token) {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -526,6 +953,12 @@
     return JSON.parse(jsonPayload);
   }
 
+  /* =========================================================
+     PROFILE STORAGE — each Google account's Grade/Interest/Topic
+     is remembered permanently (until they change it), separate
+     from whether they're currently signed in. This means signing
+     out and back in with the same account skips the setup form.
+     ========================================================= */
   function getAllProfiles() {
     const raw = localStorage.getItem('sparkfeed_profiles');
     return raw ? JSON.parse(raw) : {};
@@ -541,6 +974,7 @@
     localStorage.setItem('sparkfeed_profiles', JSON.stringify(all));
   }
 
+  // Called automatically by Google after someone signs in
   function handleCredentialResponse(response) {
     const data = parseJwt(response.credential);
     googleUser = { name: data.name, email: data.email, picture: data.picture };
@@ -548,10 +982,13 @@
     const existingProfile = getProfile(data.email);
 
     if (existingProfile) {
+      // We've seen this account before — skip straight to the dashboard
+      // using their previously saved Grade/Interest/Topic.
       localStorage.setItem('sparkfeed_active_email', data.email);
-      saveProfile(data.email, { name: data.name, picture: data.picture });
+      saveProfile(data.email, { name: data.name, picture: data.picture }); // keep photo/name fresh
       enterDashboard(data.name, existingProfile.grade, data.email, existingProfile.topic, data.picture, existingProfile.interest);
     } else {
+      // First time signing in — ask for Grade/Interest/Topic once.
       document.getElementById('signed-in-as').textContent = `Signed in as ${data.name} (${data.email})`;
       document.getElementById('signin-step').style.display = 'none';
       document.getElementById('details-step').style.display = 'block';
@@ -561,7 +998,8 @@
   function signOut() {
     google.accounts.id.disableAutoSelect();
     googleUser = { name: "", email: "", picture: "" };
-    localStorage.removeItem('sparkfeed_active_email');
+    localStorage.removeItem('sparkfeed_active_email'); // ends the CURRENT session only —
+                                                          // their saved profile stays intact
     document.body.classList.remove('theme-dashboard');
     document.getElementById('screen-dashboard').classList.remove('active');
     document.getElementById('screen-onboarding').classList.add('active');
@@ -584,10 +1022,17 @@
     }).catch(err => console.error("Signup save failed:", err));
   }
 
+  // Shows the dashboard using whatever user data is passed in —
+  // used both for a fresh sign-in and for returning users.
   function enterDashboard(name, grade, email, topic, picture, interest) {
     if (topic === "Astrophysics & Astrodynamics") {
       document.body.classList.add('theme-dashboard');
     }
+
+    // Pick the right difficulty band for this student's grade
+    const bandInfo = getVocabBankForGrade(grade);
+    currentVocabBank = bandInfo.bank;
+    currentDifficultyLabel = bandInfo.label;
 
     document.getElementById('greet-track').textContent = `Track: ${topic}`;
     document.getElementById('greet-name').textContent = `Good to see you, ${name}.`;
@@ -615,11 +1060,13 @@
     renderSiteTabs();
   }
 
+  // Shows/hides the account info dropdown when the profile picture is clicked
   function toggleProfileDropdown() {
     const dropdown = document.getElementById('profile-dropdown');
     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
   }
 
+  // Closes the dropdown if someone clicks anywhere outside it
   document.addEventListener('click', (e) => {
     const chip = document.getElementById('profile-chip');
     const dropdown = document.getElementById('profile-dropdown');
@@ -638,6 +1085,7 @@
     }
   }
 
+  // Saves the personal quote onto this account's permanent profile
   function saveQuote() {
     const quote = document.getElementById('dropdown-quote').value.trim();
     const email = document.getElementById('dropdown-email').textContent;
@@ -655,14 +1103,20 @@
 
     userData = { name, grade, email, interest, topic };
 
+    // Save this signup permanently — it'll show up in your Google Sheet
+    // and start receiving daily emails from tomorrow's automatic trigger.
     saveSignupToGoogleForm(name, grade, email, topic);
 
+    // Save this account's profile permanently, and mark them as
+    // the currently active session on this device.
     saveProfile(email, { name, grade, topic, interest, picture });
     localStorage.setItem('sparkfeed_active_email', email);
 
     enterDashboard(name, grade, email, topic, picture, interest);
   }
 
+  // On page load, check if someone's currently signed in on this device —
+  // if so, skip straight to their dashboard using their saved profile.
   window.addEventListener('DOMContentLoaded', () => {
     const activeEmail = localStorage.getItem('sparkfeed_active_email');
     if (activeEmail) {

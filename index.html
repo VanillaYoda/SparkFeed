@@ -33,8 +33,6 @@
       var(--bg-deep);
   }
 
-  /* Once someone enters the dashboard for a topic, switch to a clean,
-     focused black background — easier to read content against. */
   body.theme-dashboard {
     background: #000000;
   }
@@ -47,7 +45,6 @@
     z-index: 0; pointer-events: none;
   }
 
-  /* ---------- fake browser chrome (branding, not a live link) ---------- */
   #chrome-bar {
     position: relative; z-index: 2;
     display: flex; align-items: center; gap: 10px;
@@ -76,7 +73,6 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* ---------- onboarding ---------- */
   #onboarding-card {
     background: var(--bg-panel);
     border: 1px solid var(--line);
@@ -141,7 +137,6 @@
   }
   .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
 
-  /* ---------- dashboard ---------- */
   .greeting { margin-bottom: 40px; }
   .greeting .eyebrow { color: var(--teal); font-size: 0.75rem; text-transform: uppercase; }
   .greeting h1 { margin: 6px 0 0; font-size: 1.9rem; }
@@ -229,7 +224,6 @@
 
 <main>
 
-  <!-- ============ SCREEN 1: ONBOARDING ============ -->
   <div class="screen active" id="screen-onboarding">
     <div id="onboarding-card">
       <div style="text-align:center; margin-bottom:8px;">
@@ -248,7 +242,6 @@
         <div style="font-size:0.9rem; color:var(--text-main);">🧠 Quick quizzes to lock it in</div>
       </div>
 
-      <!-- Step 1: Sign in -->
       <div id="signin-step">
         <div id="g_id_onload"
              data-client_id="248913349435-29ivjighu7fllsjep0pmuihqek4g67hg.apps.googleusercontent.com"
@@ -257,7 +250,6 @@
         <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-width="100%"></div>
       </div>
 
-      <!-- Step 2: shown only after signing in -->
       <div id="details-step" style="display:none;">
         <p id="signed-in-as" style="color:var(--teal); font-size:0.85rem; margin-top:20px;"></p>
 
@@ -278,33 +270,54 @@
     </div>
   </div>
 
-  <!-- ============ SCREEN 2: DASHBOARD ============ -->
   <div class="screen" id="screen-dashboard">
 
-    <div class="greeting" style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div class="greeting" style="display:flex; justify-content:space-between; align-items:flex-start; position:relative;">
       <div>
         <span class="eyebrow mono" id="greet-track"></span>
         <h1 id="greet-name"></h1>
       </div>
-      <div id="profile-chip" style="display:flex; align-items:center; gap:10px;">
-        <img id="profile-pic" src="" alt="" style="width:36px; height:36px; border-radius:50%; border:1px solid var(--line);">
-        <button class="btn-ghost mono" onclick="signOut()" style="font-size:0.75rem; padding:8px 14px;">Sign out</button>
+      <div id="profile-chip" style="position:relative;">
+        <img id="profile-pic" src="" alt="" onclick="toggleProfileDropdown()" style="width:36px; height:36px; border-radius:50%; border:1px solid var(--line); cursor:pointer;">
+
+        <div id="profile-dropdown" style="display:none; position:absolute; top:48px; right:0; width:280px; background:var(--bg-panel); border:1px solid var(--line); border-radius:8px; padding:20px; z-index:10; box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <img id="dropdown-pic" src="" alt="" style="width:44px; height:44px; border-radius:50%;">
+            <div>
+              <div id="dropdown-name" style="font-size:0.95rem; color:var(--text-main);"></div>
+              <div id="dropdown-email" style="font-size:0.75rem; color:var(--text-dim);"></div>
+            </div>
+          </div>
+
+          <div style="font-size:0.85rem; color:var(--text-dim); border-top:1px solid var(--line); padding-top:12px; margin-top:4px;">
+            <div style="margin-bottom:6px;"><span class="mono" style="color:var(--teal); font-size:0.7rem;">GRADE</span><br><span id="dropdown-grade"></span></div>
+            <div style="margin-bottom:6px;"><span class="mono" style="color:var(--teal); font-size:0.7rem;">INTEREST AREA</span><br><span id="dropdown-topic"></span></div>
+            <div><span class="mono" style="color:var(--teal); font-size:0.7rem;">WHAT PULLS THEM IN</span><br><span id="dropdown-interest"></span></div>
+          </div>
+
+          <div style="border-top:1px solid var(--line); padding-top:12px; margin-top:12px;">
+            <label style="margin-top:0;">Your personal quote</label>
+            <input type="text" id="dropdown-quote" placeholder="e.g. Space is the limit" maxlength="80">
+            <button class="btn-primary" style="margin-top:10px; padding:8px; font-size:0.75rem;" onclick="saveQuote()">Save quote</button>
+          </div>
+
+          <button class="btn-ghost mono" onclick="signOut()" style="font-size:0.75rem; padding:8px 14px; width:100%; margin-top:14px;">Sign out</button>
+        </div>
+
+        <p id="quote-display" class="mono" style="font-size:0.75rem; color:var(--gold); text-align:right; margin-top:6px; font-style:italic; display:none;"></p>
       </div>
     </div>
 
-    <!-- Today's picture -->
     <section class="panel">
       <h2>Today's Highlight — From Trusted Sources</h2>
       <div id="apod-card"><div class="loading">Fetching today's content…</div></div>
     </section>
 
-    <!-- Vocabulary -->
     <section class="panel">
       <h2>5 New Words for Today</h2>
       <div id="vocab-list"></div>
     </section>
 
-    <!-- Quiz -->
     <section class="panel">
       <h2>Quick Quiz</h2>
       <div id="quiz-list"></div>
@@ -312,7 +325,6 @@
       <div id="quiz-score"></div>
     </section>
 
-    <!-- Explore sites -->
     <section class="panel">
       <h2>Explore the Source Sites</h2>
       <div class="site-tabs" id="site-tabs"></div>
@@ -549,7 +561,7 @@
     }).catch(err => console.error("Signup save failed:", err));
   }
 
-  function enterDashboard(name, grade, email, topic, picture) {
+  function enterDashboard(name, grade, email, topic, picture, interest) {
     if (topic === "Astrophysics & Astrodynamics") {
       document.body.classList.add('theme-dashboard');
     }
@@ -559,6 +571,18 @@
     document.getElementById('profile-pic').src = picture;
     document.getElementById('profile-pic').alt = name;
 
+    document.getElementById('dropdown-pic').src = picture;
+    document.getElementById('dropdown-name').textContent = name;
+    document.getElementById('dropdown-email').textContent = email;
+    document.getElementById('dropdown-grade').textContent = grade || '—';
+    document.getElementById('dropdown-topic').textContent = topic || '—';
+    document.getElementById('dropdown-interest').textContent = interest || '—';
+
+    const saved = localStorage.getItem('sparkfeed_session');
+    const quote = saved ? (JSON.parse(saved).quote || '') : '';
+    document.getElementById('dropdown-quote').value = quote;
+    updateQuoteDisplay(quote);
+
     document.getElementById('screen-onboarding').classList.remove('active');
     document.getElementById('screen-dashboard').classList.add('active');
 
@@ -566,6 +590,40 @@
     renderVocab();
     buildQuizFromVocab();
     renderSiteTabs();
+  }
+
+  function toggleProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+  }
+
+  document.addEventListener('click', (e) => {
+    const chip = document.getElementById('profile-chip');
+    const dropdown = document.getElementById('profile-dropdown');
+    if (chip && dropdown && !chip.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  function updateQuoteDisplay(quote) {
+    const display = document.getElementById('quote-display');
+    if (quote) {
+      display.textContent = `"${quote}"`;
+      display.style.display = 'block';
+    } else {
+      display.style.display = 'none';
+    }
+  }
+
+  function saveQuote() {
+    const quote = document.getElementById('dropdown-quote').value.trim();
+    const saved = localStorage.getItem('sparkfeed_session');
+    if (saved) {
+      const session = JSON.parse(saved);
+      session.quote = quote;
+      localStorage.setItem('sparkfeed_session', JSON.stringify(session));
+    }
+    updateQuoteDisplay(quote);
   }
 
   function startApp() {
@@ -580,9 +638,9 @@
 
     saveSignupToGoogleForm(name, grade, email, topic);
 
-    localStorage.setItem('sparkfeed_session', JSON.stringify({ name, grade, email, topic, picture }));
+    localStorage.setItem('sparkfeed_session', JSON.stringify({ name, grade, email, topic, picture, interest }));
 
-    enterDashboard(name, grade, email, topic, picture);
+    enterDashboard(name, grade, email, topic, picture, interest);
   }
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -590,7 +648,7 @@
     if (saved) {
       try {
         const session = JSON.parse(saved);
-        enterDashboard(session.name, session.grade, session.email, session.topic, session.picture);
+        enterDashboard(session.name, session.grade, session.email, session.topic, session.picture, session.interest);
       } catch (err) {
         console.error("Couldn't restore saved session:", err);
       }

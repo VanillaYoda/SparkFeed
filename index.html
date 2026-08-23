@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SparkFeed</title>
@@ -205,50 +206,69 @@
 
 <main>
 
+  <!-- ============ SCREEN 1: ONBOARDING ============ -->
   <div class="screen active" id="screen-onboarding">
     <div id="onboarding-card">
       <h1>Welcome to SparkFeed</h1>
-      <p class="sub">An AI helper that gives you daily snippets on whatever sparks your curiosity. Tell us a bit about you to set up your briefing.</p>
+      <p class="sub">An AI helper that gives you daily snippets on whatever sparks your curiosity.</p>
 
-      <label for="in-name">Your name</label>
-      <input type="text" id="in-name" placeholder="e.g. Aarav">
+      <!-- Step 1: Sign in -->
+      <div id="signin-step">
+        <div id="g_id_onload"
+             data-client_id="248913349435-29ivjighu7fllsjep0pmuihqek4g67hg.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-width="100%"></div>
+      </div>
 
-      <label for="in-grade">Your grade</label>
-      <input type="number" id="in-grade" placeholder="e.g. 7" min="1" max="12">
+      <!-- Step 2: shown only after signing in -->
+      <div id="details-step" style="display:none;">
+        <p id="signed-in-as" style="color:var(--teal); font-size:0.85rem; margin-top:20px;"></p>
 
-      <label for="in-interest">What pulls you in?</label>
-      <input type="text" id="in-interest" placeholder="e.g. black holes, rockets, stars">
+        <label for="in-grade">Your grade</label>
+        <input type="number" id="in-grade" placeholder="e.g. 7" min="1" max="12">
 
-      <label for="in-email">Your email (for daily briefings)</label>
-      <input type="text" id="in-email" placeholder="e.g. aarav@email.com">
+        <label for="in-interest">What pulls you in?</label>
+        <input type="text" id="in-interest" placeholder="e.g. black holes, rockets, stars">
 
-      <label for="in-topic">Choose your interest area</label>
-      <select id="in-topic">
-        <option value="Astrophysics & Astrodynamics">Astrophysics &amp; Astrodynamics</option>
-      </select>
-      <p style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">More interest areas coming soon — this is our first one.</p>
+        <label for="in-topic">Choose your interest area</label>
+        <select id="in-topic">
+          <option value="Astrophysics & Astrodynamics">Astrophysics &amp; Astrodynamics</option>
+        </select>
+        <p style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">More interest areas coming soon — this is our first one.</p>
 
-      <button class="btn-primary" onclick="startApp()">Start my briefing</button>
+        <button class="btn-primary" onclick="startApp()">Start my briefing</button>
+      </div>
     </div>
   </div>
 
+  <!-- ============ SCREEN 2: DASHBOARD ============ -->
   <div class="screen" id="screen-dashboard">
 
-    <div class="greeting">
-      <span class="eyebrow mono" id="greet-track"></span>
-      <h1 id="greet-name"></h1>
+    <div class="greeting" style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <span class="eyebrow mono" id="greet-track"></span>
+        <h1 id="greet-name"></h1>
+      </div>
+      <div id="profile-chip" style="display:flex; align-items:center; gap:10px;">
+        <img id="profile-pic" src="" alt="" style="width:36px; height:36px; border-radius:50%; border:1px solid var(--line);">
+        <button class="btn-ghost mono" onclick="signOut()" style="font-size:0.75rem; padding:8px 14px;">Sign out</button>
+      </div>
     </div>
 
+    <!-- Today's picture -->
     <section class="panel">
       <h2>Today's Picture — Live from NASA</h2>
       <div id="apod-card"><div class="loading">Contacting NASA's servers…</div></div>
     </section>
 
+    <!-- Vocabulary -->
     <section class="panel">
       <h2>5 New Words for Today</h2>
       <div id="vocab-list"></div>
     </section>
 
+    <!-- Quiz -->
     <section class="panel">
       <h2>Quick Quiz</h2>
       <div id="quiz-list"></div>
@@ -256,6 +276,7 @@
       <div id="quiz-score"></div>
     </section>
 
+    <!-- Explore sites -->
     <section class="panel">
       <h2>Explore the Source Sites</h2>
       <div class="site-tabs" id="site-tabs"></div>
@@ -436,6 +457,35 @@
 
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyRTpuZI4wXn1ipqrcZmy2s7PDCVuQ0ucLM2cJexG5ECw3437jdg7Ylv9usVoidRRnc4w/exec";
 
+  let googleUser = { name: "", email: "", picture: "" };
+
+  function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  }
+
+  function handleCredentialResponse(response) {
+    const data = parseJwt(response.credential);
+    googleUser = { name: data.name, email: data.email, picture: data.picture };
+
+    document.getElementById('signed-in-as').textContent = `Signed in as ${data.name} (${data.email})`;
+    document.getElementById('signin-step').style.display = 'none';
+    document.getElementById('details-step').style.display = 'block';
+  }
+
+  function signOut() {
+    google.accounts.id.disableAutoSelect();
+    googleUser = { name: "", email: "", picture: "" };
+    document.getElementById('screen-dashboard').classList.remove('active');
+    document.getElementById('screen-onboarding').classList.add('active');
+    document.getElementById('signin-step').style.display = 'block';
+    document.getElementById('details-step').style.display = 'none';
+  }
+
   function saveSignupToGoogleForm(name, grade, email, topic) {
     const params = new URLSearchParams();
     params.append("name", name);
@@ -452,14 +502,11 @@
   }
 
   function startApp() {
-    const name = document.getElementById('in-name').value.trim();
     const grade = document.getElementById('in-grade').value.trim();
-    const email = document.getElementById('in-email').value.trim();
     const interest = document.getElementById('in-interest').value.trim();
     const topic = document.getElementById('in-topic').value;
-
-    if (!name) { alert("Please enter your name to continue."); return; }
-    if (!email || !email.includes('@')) { alert("Please enter a valid email so we can send your daily briefing."); return; }
+    const name = googleUser.name;
+    const email = googleUser.email;
 
     userData = { name, grade, email, interest, topic };
 
@@ -467,6 +514,8 @@
 
     document.getElementById('greet-track').textContent = `Track: ${topic}`;
     document.getElementById('greet-name').textContent = `Good to see you, ${name}.`;
+    document.getElementById('profile-pic').src = googleUser.picture;
+    document.getElementById('profile-pic').alt = name;
 
     document.getElementById('screen-onboarding').classList.remove('active');
     document.getElementById('screen-dashboard').classList.add('active');

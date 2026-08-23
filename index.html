@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SparkFeed</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%230B0E1A'/%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%234FD1C5' stroke-width='2.5' stroke-dasharray='4 5'/%3E%3Cpath d='M50 22 L57 43 L78 50 L57 57 L50 78 L43 57 L22 50 L43 43 Z' fill='%23F2C879'/%3E%3C/svg%3E">
 <style>
   :root {
     --bg-deep: #0B0E1A;
@@ -20,10 +21,22 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    background: var(--bg-deep);
     color: var(--text-main);
     font-family: Georgia, 'Times New Roman', serif;
     line-height: 1.6;
+    transition: background 1.4s ease;
+    background:
+      radial-gradient(ellipse 1050px 780px at 12% 12%, rgba(245, 208, 138, 0.44), transparent 68%),
+      radial-gradient(ellipse 1100px 820px at 85% 20%, rgba(226, 230, 240, 0.30), transparent 68%),
+      radial-gradient(ellipse 950px 1050px at 55% 95%, rgba(224, 168, 68, 0.34), transparent 68%),
+      radial-gradient(ellipse 850px 680px at 90% 92%, rgba(190, 197, 214, 0.32), transparent 68%),
+      var(--bg-deep);
+  }
+
+  /* Once someone enters the dashboard for a topic, switch to a clean,
+     focused black background — easier to read content against. */
+  body.theme-dashboard {
+    background: #000000;
   }
   .mono {
     font-family: 'Courier New', monospace;
@@ -34,6 +47,7 @@
     z-index: 0; pointer-events: none;
   }
 
+  /* ---------- fake browser chrome (branding, not a live link) ---------- */
   #chrome-bar {
     position: relative; z-index: 2;
     display: flex; align-items: center; gap: 10px;
@@ -62,6 +76,7 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
+  /* ---------- onboarding ---------- */
   #onboarding-card {
     background: var(--bg-panel);
     border: 1px solid var(--line);
@@ -72,6 +87,13 @@
   #onboarding-card h1 {
     font-size: 2rem; margin: 0 0 6px;
   }
+  .logo-mark {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  .logo-mark svg { display: block; }
+  .brand-row { display: flex; align-items: center; gap: 10px; }
   #onboarding-card p.sub { color: var(--text-dim); margin: 0 0 32px; font-size: 0.95rem; }
 
   label {
@@ -119,6 +141,7 @@
   }
   .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
 
+  /* ---------- dashboard ---------- */
   .greeting { margin-bottom: 40px; }
   .greeting .eyebrow { color: var(--teal); font-size: 0.75rem; text-transform: uppercase; }
   .greeting h1 { margin: 6px 0 0; font-size: 1.9rem; }
@@ -209,8 +232,21 @@
   <!-- ============ SCREEN 1: ONBOARDING ============ -->
   <div class="screen active" id="screen-onboarding">
     <div id="onboarding-card">
-      <h1>Welcome to SparkFeed</h1>
-      <p class="sub">An AI helper that gives you daily snippets on whatever sparks your curiosity.</p>
+      <div style="text-align:center; margin-bottom:8px;">
+        <svg width="72" height="72" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#4FD1C5" stroke-width="2" stroke-dasharray="4 5"/>
+          <path d="M50 18 L58 42 L82 50 L58 58 L50 82 L42 58 L18 50 L42 42 Z" fill="#F2C879"/>
+        </svg>
+      </div>
+
+      <h1 style="text-align:center;">Welcome to SparkFeed</h1>
+      <p class="sub" style="text-align:center; font-style:italic;">"A little curiosity every day adds up to real understanding."</p>
+
+      <div style="display:flex; flex-direction:column; gap:10px; margin:22px 0 26px; padding:18px 20px; background:var(--bg-panel-2); border-radius:6px; border:1px solid var(--line);">
+        <div style="font-size:0.9rem; color:var(--text-main);">🛰️ Fresh content pulled from trusted sources every day</div>
+        <div style="font-size:0.9rem; color:var(--text-main);">📚 New vocabulary to build real expertise</div>
+        <div style="font-size:0.9rem; color:var(--text-main);">🧠 Quick quizzes to lock it in</div>
+      </div>
 
       <!-- Step 1: Sign in -->
       <div id="signin-step">
@@ -258,8 +294,8 @@
 
     <!-- Today's picture -->
     <section class="panel">
-      <h2>Today's Picture — Live from NASA</h2>
-      <div id="apod-card"><div class="loading">Contacting NASA's servers…</div></div>
+      <h2>Today's Highlight — From Trusted Sources</h2>
+      <div id="apod-card"><div class="loading">Fetching today's content…</div></div>
     </section>
 
     <!-- Vocabulary -->
@@ -290,7 +326,15 @@
 
 </main>
 
-<footer class="mono">SparkFeed · Class 7 project prototype</footer>
+<footer class="mono">
+  <span class="logo-mark" style="margin-right:6px;">
+    <svg width="16" height="16" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="34" fill="none" stroke="#4FD1C5" stroke-width="4" stroke-dasharray="6 7"/>
+      <path d="M50 22 L57 43 L78 50 L57 57 L50 78 L43 57 L22 50 L43 43 Z" fill="#F2C879"/>
+    </svg>
+  </span>
+  SparkFeed · Class 7 project prototype
+</footer>
 
 <script>
   const canvas = document.getElementById('stars');
@@ -298,16 +342,18 @@
   function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = document.body.scrollHeight; }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
-  const stars = Array.from({ length: 140 }, () => ({
+  const starColors = ['233,234,242', '245,208,138', '226,230,240', '224,168,68'];
+  const stars = Array.from({ length: 200 }, () => ({
     x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-    r: Math.random() * 1.4 + 0.3, speed: Math.random() * 0.02 + 0.005, phase: Math.random() * Math.PI * 2
+    r: Math.random() * 1.7 + 0.4, speed: Math.random() * 0.02 + 0.005, phase: Math.random() * Math.PI * 2,
+    color: starColors[Math.floor(Math.random() * (Math.random() < 0.15 ? starColors.length : 1))]
   }));
   function drawStars(t) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach(s => {
-      const twinkle = 0.5 + 0.5 * Math.sin(t * s.speed + s.phase);
+      const twinkle = 0.35 + 0.65 * Math.sin(t * s.speed + s.phase);
       ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(233,234,242,${twinkle})`; ctx.fill();
+      ctx.fillStyle = `rgba(${s.color},${twinkle})`; ctx.fill();
     });
     requestAnimationFrame(drawStars);
   }
@@ -374,7 +420,7 @@
     if (!apodTitle) return;
     const fakeTitles = ["The Whirlpool Galaxy", "A Martian Dust Devil", "Aurora Over Iceland", "The Orion Nebula"];
     const options = shuffle([apodTitle, ...shuffle(fakeTitles).slice(0,3)]);
-    todaysQuiz.push({ prompt: "What is today's NASA Astronomy Picture of the Day called?", options, correct: apodTitle });
+    todaysQuiz.push({ prompt: "What is today's featured content called?", options, correct: apodTitle });
     renderQuiz();
   }
 
@@ -480,6 +526,8 @@
   function signOut() {
     google.accounts.id.disableAutoSelect();
     googleUser = { name: "", email: "", picture: "" };
+    localStorage.removeItem('sparkfeed_session');
+    document.body.classList.remove('theme-dashboard');
     document.getElementById('screen-dashboard').classList.remove('active');
     document.getElementById('screen-onboarding').classList.add('active');
     document.getElementById('signin-step').style.display = 'block';
@@ -501,20 +549,14 @@
     }).catch(err => console.error("Signup save failed:", err));
   }
 
-  function startApp() {
-    const grade = document.getElementById('in-grade').value.trim();
-    const interest = document.getElementById('in-interest').value.trim();
-    const topic = document.getElementById('in-topic').value;
-    const name = googleUser.name;
-    const email = googleUser.email;
-
-    userData = { name, grade, email, interest, topic };
-
-    saveSignupToGoogleForm(name, grade, email, topic);
+  function enterDashboard(name, grade, email, topic, picture) {
+    if (topic === "Astrophysics & Astrodynamics") {
+      document.body.classList.add('theme-dashboard');
+    }
 
     document.getElementById('greet-track').textContent = `Track: ${topic}`;
     document.getElementById('greet-name').textContent = `Good to see you, ${name}.`;
-    document.getElementById('profile-pic').src = googleUser.picture;
+    document.getElementById('profile-pic').src = picture;
     document.getElementById('profile-pic').alt = name;
 
     document.getElementById('screen-onboarding').classList.remove('active');
@@ -525,6 +567,35 @@
     buildQuizFromVocab();
     renderSiteTabs();
   }
+
+  function startApp() {
+    const grade = document.getElementById('in-grade').value.trim();
+    const interest = document.getElementById('in-interest').value.trim();
+    const topic = document.getElementById('in-topic').value;
+    const name = googleUser.name;
+    const email = googleUser.email;
+    const picture = googleUser.picture;
+
+    userData = { name, grade, email, interest, topic };
+
+    saveSignupToGoogleForm(name, grade, email, topic);
+
+    localStorage.setItem('sparkfeed_session', JSON.stringify({ name, grade, email, topic, picture }));
+
+    enterDashboard(name, grade, email, topic, picture);
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('sparkfeed_session');
+    if (saved) {
+      try {
+        const session = JSON.parse(saved);
+        enterDashboard(session.name, session.grade, session.email, session.topic, session.picture);
+      } catch (err) {
+        console.error("Couldn't restore saved session:", err);
+      }
+    }
+  });
 </script>
 
 </body>

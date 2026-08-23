@@ -849,11 +849,34 @@
     renderQuiz();
   }
 
-  function addApodQuizQuestion(apodTitle) {
+  // Generates a genuine reading-comprehension question by blanking out
+  // a distinctive word from the article's own explanation text — you
+  // have to actually read it to answer correctly.
+  function addArticleQuizQuestions(apodTitle, explanation) {
     if (!apodTitle) return;
+
+    // Question 1: title recall
     const fakeTitles = ["The Whirlpool Galaxy", "A Martian Dust Devil", "Aurora Over Iceland", "The Orion Nebula"];
-    const options = shuffle([apodTitle, ...shuffle(fakeTitles).slice(0,3)]);
-    todaysQuiz.push({ prompt: "What is today's featured content called?", options, correct: apodTitle });
+    const titleOptions = shuffle([apodTitle, ...shuffle(fakeTitles).slice(0,3)]);
+    todaysQuiz.push({ prompt: "What is today's featured content called?", options: titleOptions, correct: apodTitle });
+
+    // Question 2: fill-in-the-blank pulled directly from the article text
+    if (explanation) {
+      const sentences = explanation.split(/(?<=[.!?])\s+/).filter(s => s.split(' ').length >= 6);
+      if (sentences.length > 0) {
+        const sentence = sentences[Math.floor(Math.random() * sentences.length)];
+        const words = sentence.replace(/[.,!?]/g, '').split(' ');
+        const candidates = words.filter(w => w.length > 6 && /^[A-Za-z-]+$/.test(w));
+        if (candidates.length > 0) {
+          const answer = candidates[Math.floor(Math.random() * candidates.length)];
+          const blanked = sentence.replace(new RegExp(`\\b${answer}\\b`), "ـــــ");
+          const distractors = shuffle(currentVocabBank.map(v => v.word)).slice(0, 3);
+          const options = shuffle([answer, ...distractors]);
+          todaysQuiz.push({ prompt: `Fill in the blank from today's article: "${blanked}"`, options, correct: answer });
+        }
+      }
+    }
+
     renderQuiz();
   }
 
@@ -902,13 +925,24 @@
         const media = data.media_type === "video"
           ? `<iframe src="${data.url}" allowfullscreen></iframe>`
           : `<img src="${data.url}" alt="${data.title}">`;
+
+        const creditLine = data.copyright
+          ? `<p class="mono" style="font-size:0.72rem; color:var(--text-dim); margin-top:6px;">Image credit: ${data.copyright.trim()}</p>`
+          : '';
+
+        const hiResLink = (data.media_type !== "video" && data.hdurl)
+          ? `<p style="margin-top:10px;"><a href="${data.hdurl}" target="_blank" style="color:var(--teal); font-size:0.85rem;">View full resolution image →</a></p>`
+          : '';
+
         card.innerHTML = `
           ${media}
           <h3 id="apod-title">${data.title}</h3>
           <span id="apod-date" class="mono">${data.date}</span>
+          ${creditLine}
           <p id="apod-explanation">${data.explanation}</p>
+          ${hiResLink}
         `;
-        addApodQuizQuestion(data.title);
+        addArticleQuizQuestions(data.title, data.explanation);
       })
       .catch(err => {
         card.innerHTML = `<div class="error">Couldn't load today's picture — NASA's shared demo key has a limited number of free requests per hour. Try again shortly, or add your own free key from api.nasa.gov.</div>`;

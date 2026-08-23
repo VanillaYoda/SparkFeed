@@ -27,10 +27,10 @@
     line-height: 1.6;
     transition: background 1.4s ease;
     background:
-      radial-gradient(ellipse 1050px 780px at 12% 12%, rgba(245, 208, 138, 0.44), transparent 68%),
-      radial-gradient(ellipse 1100px 820px at 85% 20%, rgba(226, 230, 240, 0.30), transparent 68%),
-      radial-gradient(ellipse 950px 1050px at 55% 95%, rgba(224, 168, 68, 0.34), transparent 68%),
-      radial-gradient(ellipse 850px 680px at 90% 92%, rgba(190, 197, 214, 0.32), transparent 68%),
+      radial-gradient(ellipse 1050px 780px at 12% 12%, rgba(245, 208, 138, 0.56), transparent 70%),
+      radial-gradient(ellipse 1100px 820px at 85% 20%, rgba(226, 230, 240, 0.40), transparent 70%),
+      radial-gradient(ellipse 950px 1050px at 55% 95%, rgba(224, 168, 68, 0.44), transparent 70%),
+      radial-gradient(ellipse 850px 680px at 90% 92%, rgba(190, 197, 214, 0.42), transparent 70%),
       var(--bg-deep);
   }
 
@@ -175,6 +175,13 @@
     position: relative;
     transition: border-color 0.25s ease;
   }
+  /* Each panel gets its own faint color wash, like tuning into a
+     different frequency — quiet, not a solid color-block cliché. */
+  section.panel.panel-highlight { background: radial-gradient(ellipse 600px 300px at 100% 0%, rgba(242,200,121,0.09), transparent 70%), var(--bg-panel); }
+  section.panel.panel-vocab { background: radial-gradient(ellipse 600px 300px at 100% 0%, rgba(232,136,107,0.09), transparent 70%), var(--bg-panel); }
+  section.panel.panel-quiz { background: radial-gradient(ellipse 600px 300px at 100% 0%, rgba(79,209,197,0.09), transparent 70%), var(--bg-panel); }
+  section.panel.panel-explore { background: radial-gradient(ellipse 600px 300px at 100% 0%, rgba(199,205,217,0.08), transparent 70%), var(--bg-panel); }
+
   section.panel.panel-highlight:hover { border-color: var(--gold); }
   section.panel.panel-vocab:hover { border-color: var(--coral); }
   section.panel.panel-quiz:hover { border-color: var(--teal); }
@@ -186,9 +193,17 @@
     gap: 6px;
     margin-bottom: 8px;
   }
+  /* The one signature motion in the app: each section's icon reads
+     like a quiet status light, tying back to the "signal" framing
+     (Incoming Transmission, Wider Signal) rather than being decoration. */
+  @keyframes signalPulse {
+    0%, 100% { filter: drop-shadow(0 0 0px currentColor); opacity: 0.85; }
+    50% { filter: drop-shadow(0 0 5px currentColor); opacity: 1; }
+  }
   .panel-icon {
     font-size: 18px !important;
     line-height: 1;
+    animation: signalPulse 3.2s ease-in-out infinite;
   }
   .panel-tag {
     display: block;
@@ -408,6 +423,7 @@
         <span class="panel-tag">Lexicon Update</span>
       </div>
       <h2>5 New Words for Today <span id="difficulty-badge" class="mono" style="font-size:0.7rem; color:var(--teal); border:1px solid var(--line); border-radius:12px; padding:3px 10px; margin-left:8px; vertical-align:middle;"></span></h2>
+      <p id="theme-focus" class="mono" style="font-size:0.72rem; color:var(--text-dim); margin:-10px 0 16px;"></p>
       <div id="vocab-list"></div>
     </section>
 
@@ -452,6 +468,14 @@
         <div class="video-card">
           <div class="video-embed"><iframe src="https://www.youtube.com/embed/OgC1MxtCwq4" title="ISRO NASA NISAR launch" allowfullscreen></iframe></div>
           <p class="video-caption">ISRO/NASA — GSLV-F16 NISAR Satellite Launch</p>
+        </div>
+        <div class="video-card">
+          <div class="video-embed"><iframe src="https://www.youtube.com/embed/O7VqM_Adn0A" title="Webb's Biggest Discoveries" allowfullscreen></iframe></div>
+          <p class="video-caption">NASA — Webb's Biggest Discoveries: Four Years of Science</p>
+        </div>
+        <div class="video-card">
+          <div class="video-embed"><iframe src="https://www.youtube.com/embed/d__hN6nqi-k" title="Space Flight: Application of Orbital Mechanics" allowfullscreen></iframe></div>
+          <p class="video-caption">NASA — Space Flight: The Application of Orbital Mechanics</p>
         </div>
       </div>
     </section>
@@ -916,23 +940,24 @@
   // Maps an exact grade to one of 9 buckets: 3 bands x 3 sub-difficulties
   function getVocabBankForGrade(grade) {
     const g = parseInt(grade, 10);
-    if (!g || isNaN(g)) return { bank: coreMedium, label: "Core · Medium" };
+    if (!g || isNaN(g)) return { bank: coreMedium, label: "Core · Medium", theme: "Black Holes & Cosmology" };
 
-    if (g <= 2) return { bank: foundationalEasy, label: "Foundational · Easy" };
-    if (g <= 4) return { bank: foundationalMedium, label: "Foundational · Medium" };
-    if (g === 5 || g === 6) return { bank: foundationalHard, label: "Foundational · Hard" };
+    if (g <= 2) return { bank: foundationalEasy, label: "Foundational · Easy", theme: "Space Basics" };
+    if (g <= 4) return { bank: foundationalMedium, label: "Foundational · Medium", theme: "Solar System & Orbits" };
+    if (g === 5 || g === 6) return { bank: foundationalHard, label: "Foundational · Hard", theme: "Stars & Space Weather" };
 
-    if (g === 7) return { bank: coreEasy, label: "Core · Easy" };
-    if (g === 8) return { bank: coreMedium, label: "Core · Medium" };
-    if (g === 9) return { bank: coreHard, label: "Core · Hard" };
+    if (g === 7) return { bank: coreEasy, label: "Core · Easy", theme: "Stellar Life Cycles" };
+    if (g === 8) return { bank: coreMedium, label: "Core · Medium", theme: "Black Holes & Cosmology" };
+    if (g === 9) return { bank: coreHard, label: "Core · Hard", theme: "Orbital Mechanics" };
 
-    if (g === 10) return { bank: advancedEasy, label: "Advanced · Easy" };
-    if (g === 11) return { bank: advancedMedium, label: "Advanced · Medium" };
-    return { bank: advancedHard, label: "Advanced · Hard" }; // grade 12+
+    if (g === 10) return { bank: advancedEasy, label: "Advanced · Easy", theme: "Relativity & Distances" };
+    if (g === 11) return { bank: advancedMedium, label: "Advanced · Medium", theme: "Extreme Astrophysics" };
+    return { bank: advancedHard, label: "Advanced · Hard", theme: "Theoretical Physics" }; // grade 12+
   }
 
   let currentVocabBank = coreMedium;
   let currentDifficultyLabel = "Core · Medium";
+  let currentThemeLabel = "Black Holes & Cosmology";
 
   function getTodaysWords() {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
@@ -953,6 +978,8 @@
     `).join('');
     const badge = document.getElementById('difficulty-badge');
     if (badge) badge.textContent = currentDifficultyLabel;
+    const theme = document.getElementById('theme-focus');
+    if (theme) theme.textContent = `This week's focus: ${currentThemeLabel}`;
   }
 
   /* =========================================================
@@ -1085,7 +1112,7 @@
     const requests = NEWS_FEEDS.map(feed =>
       fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.rss)}`)
         .then(r => r.json())
-        .then(data => (data.items || []).slice(0, 3).map(item => ({ source: feed.source, title: item.title, link: item.link })))
+        .then(data => (data.items || []).slice(0, 4).map(item => ({ source: feed.source, title: item.title, link: item.link })))
         .catch(() => [])
     );
 
@@ -1226,6 +1253,7 @@
     const bandInfo = getVocabBankForGrade(grade);
     currentVocabBank = bandInfo.bank;
     currentDifficultyLabel = bandInfo.label;
+    currentThemeLabel = bandInfo.theme;
 
     document.getElementById('greet-track').textContent = `Track: ${topic}`;
     document.getElementById('greet-name').textContent = `Good to see you, ${name}.`;

@@ -299,7 +299,12 @@
           </div>
 
           <div style="font-size:0.85rem; color:var(--text-dim); border-top:1px solid var(--line); padding-top:12px; margin-top:4px;">
-            <div style="margin-bottom:6px;"><span class="mono" style="color:var(--teal); font-size:0.7rem;">GRADE</span><br><span id="dropdown-grade"></span></div>
+            <span class="mono" style="color:var(--teal); font-size:0.7rem;">GRADE (updates your difficulty level)</span>
+            <div style="display:flex; gap:8px; margin-top:6px; margin-bottom:14px;">
+              <input type="number" id="dropdown-grade-input" min="1" max="12" style="margin-top:0;">
+              <button class="btn-ghost mono" style="font-size:0.7rem; padding:8px 12px; white-space:nowrap;" onclick="saveGrade()">Update</button>
+            </div>
+            <p id="grade-saved-msg" class="mono" style="font-size:0.7rem; color:var(--teal); display:none; margin:-8px 0 12px;">Saved — new difficulty applies now.</p>
             <div style="margin-bottom:6px;"><span class="mono" style="color:var(--teal); font-size:0.7rem;">INTEREST AREA</span><br><span id="dropdown-topic"></span></div>
             <div><span class="mono" style="color:var(--teal); font-size:0.7rem;">WHAT PULLS THEM IN</span><br><span id="dropdown-interest"></span></div>
           </div>
@@ -1042,7 +1047,7 @@
     document.getElementById('dropdown-pic').src = picture;
     document.getElementById('dropdown-name').textContent = name;
     document.getElementById('dropdown-email').textContent = email;
-    document.getElementById('dropdown-grade').textContent = grade || '—';
+    document.getElementById('dropdown-grade-input').value = grade || '';
     document.getElementById('dropdown-topic').textContent = topic || '—';
     document.getElementById('dropdown-interest').textContent = interest || '—';
 
@@ -1091,6 +1096,27 @@
     const email = document.getElementById('dropdown-email').textContent;
     if (email) saveProfile(email, { quote });
     updateQuoteDisplay(quote);
+  }
+
+  // Lets someone change their grade (and therefore difficulty level)
+  // right from the profile dropdown, without needing to sign out.
+  function saveGrade() {
+    const newGrade = document.getElementById('dropdown-grade-input').value.trim();
+    const email = document.getElementById('dropdown-email').textContent;
+    if (!newGrade || !email) return;
+
+    saveProfile(email, { grade: newGrade });
+
+    // Apply the new difficulty level immediately, no reload needed
+    const bandInfo = getVocabBankForGrade(newGrade);
+    currentVocabBank = bandInfo.bank;
+    currentDifficultyLabel = bandInfo.label;
+    renderVocab();
+    buildQuizFromVocab();
+
+    const msg = document.getElementById('grade-saved-msg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 2500);
   }
 
   function startApp() {

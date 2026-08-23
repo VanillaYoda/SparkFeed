@@ -526,19 +526,42 @@
     return JSON.parse(jsonPayload);
   }
 
+  function getAllProfiles() {
+    const raw = localStorage.getItem('sparkfeed_profiles');
+    return raw ? JSON.parse(raw) : {};
+  }
+
+  function getProfile(email) {
+    return getAllProfiles()[email] || null;
+  }
+
+  function saveProfile(email, profile) {
+    const all = getAllProfiles();
+    all[email] = { ...all[email], ...profile };
+    localStorage.setItem('sparkfeed_profiles', JSON.stringify(all));
+  }
+
   function handleCredentialResponse(response) {
     const data = parseJwt(response.credential);
     googleUser = { name: data.name, email: data.email, picture: data.picture };
 
-    document.getElementById('signed-in-as').textContent = `Signed in as ${data.name} (${data.email})`;
-    document.getElementById('signin-step').style.display = 'none';
-    document.getElementById('details-step').style.display = 'block';
+    const existingProfile = getProfile(data.email);
+
+    if (existingProfile) {
+      localStorage.setItem('sparkfeed_active_email', data.email);
+      saveProfile(data.email, { name: data.name, picture: data.picture });
+      enterDashboard(data.name, existingProfile.grade, data.email, existingProfile.topic, data.picture, existingProfile.interest);
+    } else {
+      document.getElementById('signed-in-as').textContent = `Signed in as ${data.name} (${data.email})`;
+      document.getElementById('signin-step').style.display = 'none';
+      document.getElementById('details-step').style.display = 'block';
+    }
   }
 
   function signOut() {
     google.accounts.id.disableAutoSelect();
     googleUser = { name: "", email: "", picture: "" };
-    localStorage.removeItem('sparkfeed_session');
+    localStorage.removeItem('sparkfeed_active_email');
     document.body.classList.remove('theme-dashboard');
     document.getElementById('screen-dashboard').classList.remove('active');
     document.getElementById('screen-onboarding').classList.add('active');
@@ -578,8 +601,8 @@
     document.getElementById('dropdown-topic').textContent = topic || '—';
     document.getElementById('dropdown-interest').textContent = interest || '—';
 
-    const saved = localStorage.getItem('sparkfeed_session');
-    const quote = saved ? (JSON.parse(saved).quote || '') : '';
+    const profile = getProfile(email);
+    const quote = profile ? (profile.quote || '') : '';
     document.getElementById('dropdown-quote').value = quote;
     updateQuoteDisplay(quote);
 
@@ -617,12 +640,8 @@
 
   function saveQuote() {
     const quote = document.getElementById('dropdown-quote').value.trim();
-    const saved = localStorage.getItem('sparkfeed_session');
-    if (saved) {
-      const session = JSON.parse(saved);
-      session.quote = quote;
-      localStorage.setItem('sparkfeed_session', JSON.stringify(session));
-    }
+    const email = document.getElementById('dropdown-email').textContent;
+    if (email) saveProfile(email, { quote });
     updateQuoteDisplay(quote);
   }
 
@@ -638,19 +657,18 @@
 
     saveSignupToGoogleForm(name, grade, email, topic);
 
-    localStorage.setItem('sparkfeed_session', JSON.stringify({ name, grade, email, topic, picture, interest }));
+    saveProfile(email, { name, grade, topic, interest, picture });
+    localStorage.setItem('sparkfeed_active_email', email);
 
     enterDashboard(name, grade, email, topic, picture, interest);
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('sparkfeed_session');
-    if (saved) {
-      try {
-        const session = JSON.parse(saved);
-        enterDashboard(session.name, session.grade, session.email, session.topic, session.picture, session.interest);
-      } catch (err) {
-        console.error("Couldn't restore saved session:", err);
+    const activeEmail = localStorage.getItem('sparkfeed_active_email');
+    if (activeEmail) {
+      const profile = getProfile(activeEmail);
+      if (profile) {
+        enterDashboard(profile.name, profile.grade, activeEmail, profile.topic, profile.picture, profile.interest);
       }
     }
   });

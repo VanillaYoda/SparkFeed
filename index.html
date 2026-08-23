@@ -315,9 +315,21 @@
   <div class="screen active" id="screen-onboarding">
     <div id="onboarding-card">
       <div style="text-align:center; margin-bottom:8px;">
-        <svg width="72" height="72" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <svg width="76" height="76" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="sparkGrad-onboard" cx="50%" cy="45%" r="65%">
+              <stop offset="0%" stop-color="#FFF1D2"/>
+              <stop offset="55%" stop-color="#F2C879"/>
+              <stop offset="100%" stop-color="#D9A24B"/>
+            </radialGradient>
+            <filter id="sparkGlow-onboard" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="2.4" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
           <circle class="orbit-ring" cx="50" cy="50" r="38" fill="none" stroke="#4FD1C5" stroke-width="2" stroke-dasharray="4 5"/>
-          <path d="M50 18 L58 42 L82 50 L58 58 L50 82 L42 58 L18 50 L42 42 Z" fill="#F2C879"/>
+          <path d="M50 16 L59 41 L84 50 L59 59 L50 84 L41 59 L16 50 L41 41 Z" fill="url(#sparkGrad-onboard)" filter="url(#sparkGlow-onboard)"/>
+          <circle cx="50" cy="50" r="5" fill="#0B0E1A"/>
         </svg>
       </div>
 
@@ -364,9 +376,27 @@
   <div class="screen" id="screen-dashboard">
 
     <div class="greeting" style="display:flex; justify-content:space-between; align-items:flex-start; position:relative;">
-      <div>
-        <span class="eyebrow mono" id="greet-track"></span>
-        <h1 id="greet-name"></h1>
+      <div style="display:flex; align-items:flex-start; gap:14px;">
+        <svg width="46" height="46" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0; margin-top:2px;">
+          <defs>
+            <radialGradient id="sparkGrad-dash" cx="50%" cy="45%" r="65%">
+              <stop offset="0%" stop-color="#FFF1D2"/>
+              <stop offset="55%" stop-color="#F2C879"/>
+              <stop offset="100%" stop-color="#D9A24B"/>
+            </radialGradient>
+            <filter id="sparkGlow-dash" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="2.4" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle class="orbit-ring" cx="50" cy="50" r="38" fill="none" stroke="#4FD1C5" stroke-width="2" stroke-dasharray="4 5"/>
+          <path d="M50 16 L59 41 L84 50 L59 59 L50 84 L41 59 L16 50 L41 41 Z" fill="url(#sparkGrad-dash)" filter="url(#sparkGlow-dash)"/>
+          <circle cx="50" cy="50" r="5" fill="#0B0E1A"/>
+        </svg>
+        <div>
+          <span class="eyebrow mono" id="greet-track"></span>
+          <h1 id="greet-name"></h1>
+        </div>
       </div>
       <div id="profile-chip" style="position:relative;">
         <img id="profile-pic" src="" alt="" onclick="toggleProfileDropdown()" style="width:36px; height:36px; border-radius:50%; border:1px solid var(--line); cursor:pointer;">
@@ -503,8 +533,15 @@
 <footer class="mono">
   <span class="logo-mark" style="margin-right:6px;">
     <svg width="16" height="16" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="sparkGrad-foot" cx="50%" cy="45%" r="65%">
+          <stop offset="0%" stop-color="#FFF1D2"/>
+          <stop offset="55%" stop-color="#F2C879"/>
+          <stop offset="100%" stop-color="#D9A24B"/>
+        </radialGradient>
+      </defs>
       <circle class="orbit-ring" cx="50" cy="50" r="34" fill="none" stroke="#4FD1C5" stroke-width="4" stroke-dasharray="6 7"/>
-      <path d="M50 22 L57 43 L78 50 L57 57 L50 78 L43 57 L22 50 L43 43 Z" fill="#F2C879"/>
+      <path d="M50 22 L57 43 L78 50 L57 57 L50 78 L43 57 L22 50 L43 43 Z" fill="url(#sparkGrad-foot)"/>
     </svg>
   </span>
   SparkFeed · Class 7 project prototype

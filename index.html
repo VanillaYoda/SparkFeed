@@ -270,6 +270,18 @@
   }
   .site-fallback a { color: var(--teal); }
 
+  .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 760px) { .video-grid { grid-template-columns: 1fr; } }
+  .video-embed { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 4px; overflow: hidden; background: #05070F; }
+  .video-embed iframe { width: 100%; height: 100%; border: none; display: block; }
+  .video-caption { font-size: 0.8rem; color: var(--text-dim); margin-top: 8px; }
+
+  .news-item { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  .news-item:last-child { border-bottom: none; }
+  .news-item a { color: var(--text-main); text-decoration: none; font-size: 0.95rem; }
+  .news-item a:hover { color: var(--gold); }
+  .news-source { font-family: 'Courier New', monospace; font-size: 0.7rem; color: var(--teal); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 3px; }
+
   footer { text-align: center; color: var(--text-dim); font-size: 0.8rem; padding: 20px; position:relative; z-index:1; }
 </style>
 </head>
@@ -409,6 +421,39 @@
       <div id="quiz-list"></div>
       <button class="btn-primary" onclick="gradeQuiz()">Check my answers</button>
       <div id="quiz-score"></div>
+    </section>
+
+    <!-- Space News (headlines from NASA + ESA, not just APOD) -->
+    <section class="panel panel-highlight full">
+      <div class="panel-tag-row">
+        <span class="material-icons panel-icon">rss_feed</span>
+        <span class="panel-tag">Wider Signal</span>
+      </div>
+      <h2>Space News</h2>
+      <div id="news-list"><div class="loading">Scanning for signals…</div></div>
+    </section>
+
+    <!-- Featured Videos -->
+    <section class="panel panel-vocab full">
+      <div class="panel-tag-row">
+        <span class="material-icons panel-icon">play_circle</span>
+        <span class="panel-tag">Featured Footage</span>
+      </div>
+      <h2>Watch & Learn</h2>
+      <div class="video-grid">
+        <div class="video-card">
+          <div class="video-embed"><iframe src="https://www.youtube.com/embed/chhcwk4-esM" title="NASA — Plunge Into a Black Hole: Explained" allowfullscreen></iframe></div>
+          <p class="video-caption">NASA — Simulation's Plunge Into a Black Hole</p>
+        </div>
+        <div class="video-card">
+          <div class="video-embed"><iframe src="https://www.youtube.com/embed/ueBf0RsDaOE" title="ESA preview 2026" allowfullscreen></iframe></div>
+          <p class="video-caption">ESA — Preview 2026: The Year Ahead</p>
+        </div>
+        <div class="video-card">
+          <div class="video-embed"><iframe src="https://www.youtube.com/embed/OgC1MxtCwq4" title="ISRO NASA NISAR launch" allowfullscreen></iframe></div>
+          <p class="video-caption">ISRO/NASA — GSLV-F16 NISAR Satellite Launch</p>
+        </div>
+      </div>
     </section>
 
     <!-- Explore sites -->
@@ -1026,6 +1071,40 @@
   }
 
   /* =========================================================
+     SPACE NEWS — general headlines from NASA + ESA, not just
+     the single daily picture. Uses a free RSS-to-JSON proxy
+     since browsers can't read most RSS feeds directly.
+     ========================================================= */
+  const NEWS_FEEDS = [
+    { source: "NASA", rss: "https://www.nasa.gov/feed/" },
+    { source: "ESA", rss: "https://www.esa.int/rssfeed/Our_Activities/Space_News" }
+  ];
+
+  function loadSpaceNews() {
+    const list = document.getElementById('news-list');
+    const requests = NEWS_FEEDS.map(feed =>
+      fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.rss)}`)
+        .then(r => r.json())
+        .then(data => (data.items || []).slice(0, 3).map(item => ({ source: feed.source, title: item.title, link: item.link })))
+        .catch(() => [])
+    );
+
+    Promise.all(requests).then(results => {
+      const allItems = results.flat();
+      if (allItems.length === 0) {
+        list.innerHTML = `<div class="error">Couldn't load space news right now — try refreshing in a bit.</div>`;
+        return;
+      }
+      list.innerHTML = allItems.map(item => `
+        <div class="news-item">
+          <span class="news-source">${item.source}</span>
+          <a href="${item.link}" target="_blank">${item.title}</a>
+        </div>
+      `).join('');
+    });
+  }
+
+  /* =========================================================
      EXPLORE SITES (embedded viewer)
      ========================================================= */
   const sites = [
@@ -1171,6 +1250,7 @@
     loadApod();
     renderVocab();
     buildQuizFromVocab();
+    loadSpaceNews();
     renderSiteTabs();
   }
 

@@ -288,18 +288,19 @@
 
   #notes-textarea {
     width: 100%;
-    min-height: 140px;
+    min-height: 260px;
     resize: vertical;
     background: var(--bg-panel-2);
     border: 1px solid var(--line);
     color: var(--text-main);
     font-family: Georgia, serif;
-    font-size: 0.95rem;
-    padding: 14px;
-    border-radius: 6px;
-    line-height: 1.5;
+    font-size: 1rem;
+    padding: 16px;
+    border-radius: 8px;
+    line-height: 1.6;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  #notes-textarea:focus { outline: 2px solid #8FA3F2; }
+  #notes-textarea:focus { outline: none; border-color: #8FA3F2; box-shadow: 0 0 0 3px rgba(143,163,242,0.18); }
 
   .notes-toolbar { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
   .notes-save-status { font-size: 0.75rem; color: var(--text-dim); font-family: 'Courier New', monospace; }
@@ -350,22 +351,34 @@
   #notes-drawer {
     position: fixed;
     top: 0; right: 0;
-    width: 380px;
-    max-width: 90vw;
+    width: 460px;
+    max-width: 92vw;
     height: 100vh;
-    background: var(--bg-panel);
-    border-left: 1px solid var(--line);
+    background:
+      radial-gradient(ellipse 500px 400px at 100% 0%, rgba(143,163,242,0.18), transparent 65%),
+      radial-gradient(ellipse 400px 500px at 0% 100%, rgba(242,200,121,0.10), transparent 65%),
+      var(--bg-panel);
+    border-left: 1px solid #8FA3F2;
     z-index: 30;
-    padding: 24px;
+    padding: 30px;
     overflow-y: auto;
     transform: translateX(100%);
     transition: transform 0.28s ease;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.4);
+    box-shadow: -14px 0 40px rgba(0,0,0,0.5), -1px 0 0 rgba(143,163,242,0.3);
   }
   #notes-drawer.open { transform: translateX(0); }
-  .notes-drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-  .notes-drawer-close { cursor: pointer; color: var(--text-dim); font-size: 1.3rem; line-height: 1; }
-  .notes-drawer-close:hover { color: var(--text-main); }
+  .notes-drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+  .notes-drawer-close {
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    line-height: 1;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .notes-drawer-close:hover { color: var(--text-main); background: var(--bg-panel-2); }
 
   @media (max-width: 760px) {
     #notes-drawer { width: 100vw; max-width: 100vw; }
@@ -795,14 +808,21 @@
 <div id="notes-overlay" onclick="toggleNotesDrawer()"></div>
 <div id="notes-drawer">
   <div class="notes-drawer-header">
-    <span class="panel-tag" style="color:#8FA3F2;">Field Notes</span>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="width:40px; height:40px; border-radius:50%; background:rgba(143,163,242,0.2); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8FA3F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h13l3 3v15H4z"/><path d="M17 3v3h3"/><path d="M8 11h8M8 15h8M8 7h4"/></svg>
+      </span>
+      <div>
+        <span class="panel-tag" style="color:#8FA3F2;">Field Notes</span>
+        <h2 style="margin:2px 0 0; font-size:1.35rem;">Take Notes</h2>
+      </div>
+    </div>
     <span class="notes-drawer-close" onclick="toggleNotesDrawer()">✕</span>
   </div>
-  <h2 style="margin:0 0 4px; font-size:1.3rem;">Take Notes</h2>
-  <p style="color:var(--text-dim); font-size:0.82rem; margin:0 0 16px;">Private to you — saved automatically to your account.</p>
+  <p style="color:var(--text-dim); font-size:0.85rem; margin:0 0 18px;">Private to you — saved automatically to your account.</p>
   <textarea id="notes-textarea" placeholder="Jot down anything worth remembering — questions, ideas, things to look up later..."></textarea>
   <div class="notes-toolbar">
-    <button class="btn-ghost mono" style="font-size:0.75rem; padding:8px 14px;" onclick="document.getElementById('notes-image-input').click()">+ Add image</button>
+    <button class="btn-ghost mono" style="font-size:0.75rem; padding:9px 16px; border-color:#8FA3F2; color:#8FA3F2;" onclick="document.getElementById('notes-image-input').click()">+ Add image</button>
     <input type="file" id="notes-image-input" accept="image/*" multiple style="display:none;">
     <span class="notes-save-status" id="notes-save-status"></span>
   </div>

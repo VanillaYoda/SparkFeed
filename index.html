@@ -73,7 +73,7 @@
     max-width: 320px;
   }
 
-  main { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 40px 20px 100px; margin-left: 88px; }
+  main { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 40px 32px 100px; margin-left: 108px; }
 
   /* ---------- app sidebar (gives it "web app" chrome, not just a page) ---------- */
   #app-sidebar {
@@ -153,6 +153,9 @@
     border-radius: 6px;
     padding: 40px 32px;
     margin-top: 40px;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
   }
   #onboarding-card h1 {
     font-size: 2rem; margin: 0 0 6px;
@@ -276,6 +279,61 @@
   .panel-vocab .panel-icon-badge { background: rgba(232,136,107,0.18); }
   .panel-quiz .panel-icon-badge { background: rgba(79,209,197,0.18); }
   .panel-explore .panel-icon-badge { background: rgba(199,205,217,0.16); }
+
+  /* ---------- Field Notes ---------- */
+  section.panel.panel-notes { background: radial-gradient(ellipse 600px 300px at 100% 0%, rgba(143,163,242,0.09), transparent 70%), var(--bg-panel); }
+  section.panel.panel-notes:hover { border-color: #8FA3F2; }
+  .panel-notes .panel-tag, .panel-notes .panel-icon { color: #8FA3F2; }
+  .panel-notes .panel-icon-badge { background: rgba(143,163,242,0.18); }
+
+  #notes-textarea {
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    color: var(--text-main);
+    font-family: Georgia, serif;
+    font-size: 0.95rem;
+    padding: 14px;
+    border-radius: 6px;
+    line-height: 1.5;
+  }
+  #notes-textarea:focus { outline: 2px solid #8FA3F2; }
+
+  .notes-toolbar { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .notes-save-status { font-size: 0.75rem; color: var(--text-dim); font-family: 'Courier New', monospace; }
+
+  .notes-image-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .notes-image-chip {
+    position: relative;
+    width: 84px; height: 84px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .notes-image-chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .notes-image-chip .remove-btn {
+    position: absolute;
+    top: 3px; right: 3px;
+    width: 18px; height: 18px;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .notes-drop-zone {
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 10px;
+  }
 
   .panel-icon-badge .tooltip {
     position: absolute;
@@ -663,6 +721,23 @@
         <iframe id="site-frame" src="" title="site viewer"></iframe>
       </div>
       <div class="site-fallback">Some sites don't allow embedding for security reasons. If a page looks blank, use the link below to open it directly. <br><a id="site-direct-link" href="#" target="_blank">Open this site in a new tab →</a></div>
+    </section>
+
+    <!-- Field Notes -->
+    <section class="panel panel-notes full">
+      <div class="panel-tag-row">
+        <span class="panel-icon-badge" tabindex="0"><svg class="panel-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h13l3 3v15H4z"/><path d="M17 3v3h3"/><path d="M8 11h8M8 15h8M8 7h4"/></svg><span class="tooltip">Your own notes and saved images — private to you</span></span>
+        <span class="panel-tag">Field Notes</span>
+      </div>
+      <h2>Take Notes</h2>
+      <textarea id="notes-textarea" placeholder="Jot down anything worth remembering — questions, ideas, things to look up later..."></textarea>
+      <div class="notes-toolbar">
+        <button class="btn-ghost mono" style="font-size:0.75rem; padding:8px 14px;" onclick="document.getElementById('notes-image-input').click()">+ Add image</button>
+        <input type="file" id="notes-image-input" accept="image/*" multiple style="display:none;">
+        <span class="notes-save-status" id="notes-save-status"></span>
+      </div>
+      <div class="notes-drop-zone">You can also paste a copied image directly into the notes box above (Ctrl+V / Cmd+V)</div>
+      <div class="notes-image-grid" id="notes-image-grid"></div>
     </section>
 
     </div>
@@ -1564,6 +1639,7 @@
     buildQuizFromVocab();
     loadSpaceNews();
     renderSiteTabs();
+    loadNotesForCurrentUser(email);
   }
 
   // Shows/hides the account info dropdown when the profile picture is clicked
@@ -1644,6 +1720,103 @@
 
     enterDashboard(name, grade, email, topic, picture, interest);
   }
+
+  /* =========================================================
+     FIELD NOTES — private per-student notes + pasted/uploaded
+     images, saved locally to this browser under their account.
+     ========================================================= */
+  let notesCurrentEmail = "";
+  let notesSaveTimer = null;
+
+  function getNotesKey(email) { return `sparkfeed_notes_${email}`; }
+
+  function loadNotesForCurrentUser(email) {
+    notesCurrentEmail = email;
+    const raw = localStorage.getItem(getNotesKey(email));
+    const data = raw ? JSON.parse(raw) : { text: "", images: [] };
+    document.getElementById('notes-textarea').value = data.text || "";
+    renderNotesImages(data.images || []);
+  }
+
+  function getNotesData() {
+    const raw = localStorage.getItem(getNotesKey(notesCurrentEmail));
+    return raw ? JSON.parse(raw) : { text: "", images: [] };
+  }
+
+  function saveNotesData(data) {
+    localStorage.setItem(getNotesKey(notesCurrentEmail), JSON.stringify(data));
+    const status = document.getElementById('notes-save-status');
+    if (status) {
+      status.textContent = "Saved ✓";
+      setTimeout(() => { status.textContent = ""; }, 1800);
+    }
+  }
+
+  function renderNotesImages(images) {
+    const grid = document.getElementById('notes-image-grid');
+    if (!grid) return;
+    grid.innerHTML = images.map((src, i) => `
+      <div class="notes-image-chip">
+        <img src="${src}" alt="Saved note image">
+        <div class="remove-btn" onclick="removeNoteImage(${i})">✕</div>
+      </div>
+    `).join('');
+  }
+
+  function removeNoteImage(index) {
+    const data = getNotesData();
+    data.images.splice(index, 1);
+    saveNotesData(data);
+    renderNotesImages(data.images);
+  }
+
+  function addNoteImageFromFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = getNotesData();
+      data.images = data.images || [];
+      data.images.push(e.target.result);
+      saveNotesData(data);
+      renderNotesImages(data.images);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Wire up the notes textarea, file picker, and paste-to-add-image
+  window.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('notes-textarea');
+    const fileInput = document.getElementById('notes-image-input');
+
+    if (textarea) {
+      textarea.addEventListener('input', () => {
+        clearTimeout(notesSaveTimer);
+        notesSaveTimer = setTimeout(() => {
+          const data = getNotesData();
+          data.text = textarea.value;
+          saveNotesData(data);
+        }, 600); // brief pause after typing stops, so it doesn't save on every keystroke
+      });
+
+      textarea.addEventListener('paste', (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') === 0) {
+            addNoteImageFromFile(items[i].getAsFile());
+          }
+        }
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', () => {
+        Array.from(fileInput.files).forEach(addNoteImageFromFile);
+        fileInput.value = ""; // reset so the same file can be re-added later if needed
+      });
+    }
+  });
+
 
   // On page load, check if someone's currently signed in on this device —
   // if so, skip straight to their dashboard using their saved profile.

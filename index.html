@@ -977,24 +977,25 @@
   // Maps an exact grade to one of 9 buckets: 3 bands x 3 sub-difficulties
   function getVocabBankForGrade(grade) {
     const g = parseInt(grade, 10);
-    if (!g || isNaN(g)) return { bank: coreMedium, label: "Core · Medium", theme: "Black Holes & Cosmology" };
+    if (!g || isNaN(g)) return { bank: coreMedium, label: "Core · Medium", theme: "Black Holes & Cosmology", band: "Core" };
 
-    if (g <= 2) return { bank: foundationalEasy, label: "Foundational · Easy", theme: "Space Basics" };
-    if (g <= 4) return { bank: foundationalMedium, label: "Foundational · Medium", theme: "Solar System & Orbits" };
-    if (g === 5 || g === 6) return { bank: foundationalHard, label: "Foundational · Hard", theme: "Stars & Space Weather" };
+    if (g <= 2) return { bank: foundationalEasy, label: "Foundational · Easy", theme: "Space Basics", band: "Foundational" };
+    if (g <= 4) return { bank: foundationalMedium, label: "Foundational · Medium", theme: "Solar System & Orbits", band: "Foundational" };
+    if (g === 5 || g === 6) return { bank: foundationalHard, label: "Foundational · Hard", theme: "Stars & Space Weather", band: "Foundational" };
 
-    if (g === 7) return { bank: coreEasy, label: "Core · Easy", theme: "Stellar Life Cycles" };
-    if (g === 8) return { bank: coreMedium, label: "Core · Medium", theme: "Black Holes & Cosmology" };
-    if (g === 9) return { bank: coreHard, label: "Core · Hard", theme: "Orbital Mechanics" };
+    if (g === 7) return { bank: coreEasy, label: "Core · Easy", theme: "Stellar Life Cycles", band: "Core" };
+    if (g === 8) return { bank: coreMedium, label: "Core · Medium", theme: "Black Holes & Cosmology", band: "Core" };
+    if (g === 9) return { bank: coreHard, label: "Core · Hard", theme: "Orbital Mechanics", band: "Core" };
 
-    if (g === 10) return { bank: advancedEasy, label: "Advanced · Easy", theme: "Relativity & Distances" };
-    if (g === 11) return { bank: advancedMedium, label: "Advanced · Medium", theme: "Extreme Astrophysics" };
-    return { bank: advancedHard, label: "Advanced · Hard", theme: "Theoretical Physics" }; // grade 12+
+    if (g === 10) return { bank: advancedEasy, label: "Advanced · Easy", theme: "Relativity & Distances", band: "Advanced" };
+    if (g === 11) return { bank: advancedMedium, label: "Advanced · Medium", theme: "Extreme Astrophysics", band: "Advanced" };
+    return { bank: advancedHard, label: "Advanced · Hard", theme: "Theoretical Physics", band: "Advanced" }; // grade 12+
   }
 
   let currentVocabBank = coreMedium;
   let currentDifficultyLabel = "Core · Medium";
   let currentThemeLabel = "Black Holes & Cosmology";
+  let currentBand = "Core";
 
   function getTodaysWords() {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
@@ -1101,6 +1102,19 @@
      ========================================================= */
   const NASA_API_KEY = "DEMO_KEY"; // replace with your own free key from api.nasa.gov
 
+  // Adjusts how much of the article a student sees, based on their grade band —
+  // Foundational gets a short excerpt with a link to read more, Advanced gets
+  // the full text. No AI needed, just sentence counting.
+  function truncateExplanation(text, band) {
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    let count;
+    if (band === "Foundational") count = 2;
+    else if (band === "Core") count = 4;
+    else count = sentences.length; // Advanced: full text, no truncation
+    const shown = sentences.slice(0, count).join(' ');
+    return { text: shown, isTruncated: count < sentences.length };
+  }
+
   function loadApod() {
     const card = document.getElementById('apod-card');
     fetch(`https://api.nasa.gov/planetary/apod?api_key=${NASA_API_KEY}`)
@@ -1118,15 +1132,26 @@
           ? `<p style="margin-top:10px;"><a href="${data.hdurl}" target="_blank" style="color:var(--teal); font-size:0.85rem;">View full resolution image →</a></p>`
           : '';
 
+        const { text: shownExplanation, isTruncated } = truncateExplanation(data.explanation, currentBand);
+
+        // Build a link back to NASA's own page for this exact day, in case
+        // a younger student wants to read the full, un-shortened version.
+        const dateParts = data.date.split('-'); // YYYY-MM-DD
+        const apodPageUrl = `https://apod.nasa.gov/apod/ap${dateParts[0].slice(2)}${dateParts[1]}${dateParts[2]}.html`;
+        const readMoreLink = isTruncated
+          ? `<p style="margin-top:8px;"><a href="${apodPageUrl}" target="_blank" style="color:var(--gold); font-size:0.85rem;">Read the full explanation on NASA's site →</a></p>`
+          : '';
+
         card.innerHTML = `
           ${media}
           <h3 id="apod-title">${data.title}</h3>
           <span id="apod-date" class="mono">${data.date}</span>
           ${creditLine}
-          <p id="apod-explanation">${data.explanation}</p>
+          <p id="apod-explanation">${shownExplanation}</p>
+          ${readMoreLink}
           ${hiResLink}
         `;
-        addArticleQuizQuestions(data.title, data.explanation);
+        addArticleQuizQuestions(data.title, shownExplanation);
       })
       .catch(err => {
         card.innerHTML = `<div class="error">Couldn't load today's picture — NASA's shared demo key has a limited number of free requests per hour. Try again shortly, or add your own free key from api.nasa.gov.</div>`;
@@ -1291,6 +1316,7 @@
     currentVocabBank = bandInfo.bank;
     currentDifficultyLabel = bandInfo.label;
     currentThemeLabel = bandInfo.theme;
+    currentBand = bandInfo.band;
 
     document.getElementById('greet-track').textContent = `Track: ${topic}`;
     document.getElementById('greet-name').textContent = `Good to see you, ${name}.`;
@@ -1365,8 +1391,11 @@
     const bandInfo = getVocabBankForGrade(newGrade);
     currentVocabBank = bandInfo.bank;
     currentDifficultyLabel = bandInfo.label;
+    currentThemeLabel = bandInfo.theme;
+    currentBand = bandInfo.band;
     renderVocab();
     buildQuizFromVocab();
+    loadApod(); // re-fetch so the article length matches the new grade band
 
     const msg = document.getElementById('grade-saved-msg');
     msg.style.display = 'block';

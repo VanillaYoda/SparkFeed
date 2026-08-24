@@ -55,7 +55,9 @@
     background: #05070F;
     border-bottom: 1px solid var(--line);
     padding: 10px 16px;
+    margin-left: 72px;
   }
+  @media (max-width: 760px) { #chrome-bar { margin-left: 56px; } }
   #chrome-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
   #chrome-bar .dot.r { background: #E8886B; }
   #chrome-bar .dot.y { background: #F2C879; }
@@ -72,7 +74,43 @@
     max-width: 320px;
   }
 
-  main { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 40px 20px 100px; }
+  main { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 40px 20px 100px; margin-left: 88px; }
+
+  /* ---------- app sidebar (gives it "web app" chrome, not just a page) ---------- */
+  #app-sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 72px;
+    height: 100vh;
+    background: #05070F;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 0;
+    z-index: 5;
+  }
+  #app-sidebar .sidebar-logo { margin-bottom: 28px; }
+  .sidebar-nav { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .sidebar-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    position: relative;
+  }
+  .sidebar-icon:hover { background: var(--bg-panel-2); color: var(--text-main); }
+  .sidebar-icon.active { background: rgba(242,200,121,0.15); color: var(--gold); }
+  .sidebar-icon.disabled { opacity: 0.35; cursor: default; }
+  .sidebar-icon.disabled:hover { background: none; color: var(--text-dim); }
+  .sidebar-icon .material-icons { font-size: 22px; }
+
+  @media (max-width: 760px) {
+    #app-sidebar { width: 56px; }
+    main { margin-left: 64px; padding-left: 8px; padding-right: 8px; }
+  }
 
   .screen { display: none; }
   .screen.active { display: block; }
@@ -190,9 +228,22 @@
   .panel-tag-row {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 8px;
+    gap: 10px;
+    margin-bottom: 10px;
   }
+  /* Colored circular icon badges, like an app's tool grid — gives the
+     dashboard "web app" chrome instead of flat text-with-icon rows. */
+  .panel-icon-badge {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .panel-highlight .panel-icon-badge { background: rgba(242,200,121,0.18); }
+  .panel-vocab .panel-icon-badge { background: rgba(232,136,107,0.18); }
+  .panel-quiz .panel-icon-badge { background: rgba(79,209,197,0.18); }
+  .panel-explore .panel-icon-badge { background: rgba(199,205,217,0.16); }
+
   /* The one signature motion in the app: each section's icon reads
      like a quiet status light, tying back to the "signal" framing
      (Incoming Transmission, Wider Signal) rather than being decoration. */
@@ -303,6 +354,28 @@
 <body>
 
 <canvas id="stars"></canvas>
+
+<div id="app-sidebar">
+  <div class="sidebar-logo">
+    <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="sparkGrad-side" cx="50%" cy="45%" r="65%">
+          <stop offset="0%" stop-color="#FFF1D2"/>
+          <stop offset="55%" stop-color="#F2C879"/>
+          <stop offset="100%" stop-color="#D9A24B"/>
+        </radialGradient>
+      </defs>
+      <circle class="orbit-ring" cx="50" cy="50" r="38" fill="none" stroke="#4FD1C5" stroke-width="2.5" stroke-dasharray="4 5"/>
+      <path d="M50 16 L59 41 L84 50 L59 59 L50 84 L41 59 L16 50 L41 41 Z" fill="url(#sparkGrad-side)"/>
+    </svg>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-icon active" title="Dashboard"><span class="material-icons">home</span></div>
+    <div class="sidebar-icon disabled" title="More interest areas — coming soon"><span class="material-icons">explore</span></div>
+    <div class="sidebar-icon disabled" title="Career paths — coming soon"><span class="material-icons">work</span></div>
+    <div class="sidebar-icon disabled" title="Progress tracker — coming soon"><span class="material-icons">trending_up</span></div>
+  </div>
+</div>
 
 <div id="chrome-bar">
   <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
@@ -439,7 +512,7 @@
     <!-- Today's picture -->
     <section class="panel panel-highlight full">
       <div class="panel-tag-row">
-        <span class="material-icons panel-icon">satellite_alt</span>
+        <span class="panel-icon-badge"><span class="material-icons panel-icon">satellite_alt</span></span>
         <span class="panel-tag">Incoming Transmission</span>
       </div>
       <h2>Today's Highlight — From Trusted Sources</h2>
@@ -449,7 +522,7 @@
     <!-- Vocabulary -->
     <section class="panel panel-vocab">
       <div class="panel-tag-row">
-        <span class="material-icons panel-icon">menu_book</span>
+        <span class="panel-icon-badge"><span class="material-icons panel-icon">menu_book</span></span>
         <span class="panel-tag">Lexicon Update</span>
       </div>
       <h2>5 New Words for Today <span id="difficulty-badge" class="mono" style="font-size:0.7rem; color:var(--teal); border:1px solid var(--line); border-radius:12px; padding:3px 10px; margin-left:8px; vertical-align:middle;"></span></h2>
@@ -460,7 +533,7 @@
     <!-- Quiz -->
     <section class="panel panel-quiz">
       <div class="panel-tag-row">
-        <span class="material-icons panel-icon">fact_check</span>
+        <span class="panel-icon-badge"><span class="material-icons panel-icon">fact_check</span></span>
         <span class="panel-tag">Systems Check</span>
       </div>
       <h2>Quick Quiz</h2>
@@ -472,7 +545,7 @@
     <!-- Space News (headlines from NASA + ESA, not just APOD) -->
     <section class="panel panel-highlight full">
       <div class="panel-tag-row">
-        <span class="material-icons panel-icon">rss_feed</span>
+        <span class="panel-icon-badge"><span class="material-icons panel-icon">rss_feed</span></span>
         <span class="panel-tag">Wider Signal</span>
       </div>
       <h2>Space News</h2>
@@ -482,7 +555,7 @@
     <!-- Featured Videos -->
     <section class="panel panel-vocab full">
       <div class="panel-tag-row">
-        <span class="material-icons panel-icon">play_circle</span>
+        <span class="panel-icon-badge"><span class="material-icons panel-icon">play_circle</span></span>
         <span class="panel-tag">Featured Footage</span>
       </div>
       <h2>Watch & Learn</h2>
@@ -513,7 +586,7 @@
     <!-- Explore sites -->
     <section class="panel panel-explore full">
       <div class="panel-tag-row">
-        <span class="material-icons panel-icon">public</span>
+        <span class="panel-icon-badge"><span class="material-icons panel-icon">public</span></span>
         <span class="panel-tag">Ground Stations</span>
       </div>
       <h2>Explore the Source Sites</h2>
@@ -1115,6 +1188,64 @@
     return { text: shown, isTruncated: count < sentences.length };
   }
 
+  // Looks up a real "History & Origins" section for whatever today's
+  // topic happens to be. Tries a general web source first (not limited
+  // to one site), then falls back to Wikipedia if that comes up empty —
+  // true "search the whole web" isn't free without a paid API, so this
+  // is the honest best-effort version: broader than one site, not
+  // literally every website.
+  async function loadTopicHistory(title) {
+    // Attempt 1: DuckDuckGo's free instant-answer API, which pulls its
+    // abstract from whichever source it judges best — sometimes Wikipedia,
+    // sometimes another reference site — genuinely not locked to one site.
+    try {
+      const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(title)}&format=json&no_html=1&skip_disambig=1`;
+      const ddg = await fetch(ddgUrl).then(r => r.json());
+      if (ddg.AbstractText) {
+        return {
+          extract: ddg.AbstractText,
+          pageUrl: ddg.AbstractURL || null,
+          sourceName: ddg.AbstractSource || "Web"
+        };
+      }
+    } catch (err) {
+      // DuckDuckGo's API doesn't always allow browser requests — that's fine,
+      // we just fall through to Wikipedia below.
+    }
+
+    // Attempt 2: Wikipedia — reliable, free, and covers almost every
+    // astronomy topic, used as the dependable fallback.
+    try {
+      let matchedTitle = null;
+
+      const openSearchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(title)}&limit=1&namespace=0&format=json&origin=*`;
+      const openSearchResults = await fetch(openSearchUrl).then(r => r.json());
+      matchedTitle = openSearchResults[1] && openSearchResults[1][0];
+
+      if (!matchedTitle) {
+        const fuzzySearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*&srlimit=1`;
+        const fuzzyResults = await fetch(fuzzySearchUrl).then(r => r.json());
+        const hit = fuzzyResults.query && fuzzyResults.query.search && fuzzyResults.query.search[0];
+        matchedTitle = hit ? hit.title : null;
+      }
+
+      if (!matchedTitle) return null;
+
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(matchedTitle)}`;
+      const summary = await fetch(summaryUrl).then(r => r.json());
+      if (!summary.extract) return null;
+
+      return {
+        title: matchedTitle,
+        extract: summary.extract,
+        pageUrl: summary.content_urls && summary.content_urls.desktop ? summary.content_urls.desktop.page : null,
+        sourceName: "Wikipedia"
+      };
+    } catch (err) {
+      return null;
+    }
+  }
+
   function loadApod() {
     const card = document.getElementById('apod-card');
     fetch(`https://api.nasa.gov/planetary/apod?api_key=${NASA_API_KEY}`)
@@ -1150,8 +1281,30 @@
           <p id="apod-explanation">${shownExplanation}</p>
           ${readMoreLink}
           ${hiResLink}
+          <div id="history-section"></div>
         `;
         addArticleQuizQuestions(data.title, shownExplanation);
+
+        // Fetch history/background separately — it can take a moment,
+        // and shouldn't hold up the main picture from showing first.
+        loadTopicHistory(data.title).then(history => {
+          const section = document.getElementById('history-section');
+          if (!section || !history) return;
+
+          const { text: historyText } = truncateExplanation(history.extract, currentBand);
+          const sourceLabel = history.sourceName || "the source";
+          const sourceLink = history.pageUrl
+            ? `<a href="${history.pageUrl}" target="_blank" style="color:var(--teal); font-size:0.8rem;">Read more on ${sourceLabel} →</a>`
+            : '';
+
+          section.innerHTML = `
+            <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--line);">
+              <span class="panel-tag" style="color:var(--gold);">History &amp; Origins</span>
+              <p style="font-size:0.92rem; margin-top:8px;">${historyText}</p>
+              <p style="margin-top:8px;">${sourceLink}</p>
+            </div>
+          `;
+        });
       })
       .catch(err => {
         card.innerHTML = `<div class="error">Couldn't load today's picture — NASA's shared demo key has a limited number of free requests per hour. Try again shortly, or add your own free key from api.nasa.gov.</div>`;

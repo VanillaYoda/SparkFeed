@@ -637,7 +637,12 @@
           <h1 id="greet-name"></h1>
         </div>
       </div>
-      <div id="profile-chip" style="position:relative;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn-ghost mono" onclick="toggleNotesDrawer()" style="font-size:0.78rem; padding:9px 16px; display:flex; align-items:center; gap:6px; border-color:#8FA3F2; color:#8FA3F2;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h13l3 3v15H4z"/><path d="M17 3v3h3"/><path d="M8 11h8M8 15h8M8 7h4"/></svg>
+          Notes
+        </button>
+        <div id="profile-chip" style="position:relative;">
         <img id="profile-pic" src="" alt="" onclick="toggleProfileDropdown()" style="width:36px; height:36px; border-radius:50%; border:1px solid var(--line); cursor:pointer;">
 
         <div id="profile-dropdown" style="display:none; position:absolute; top:48px; right:0; width:280px; background:var(--bg-panel); border:1px solid var(--line); border-radius:8px; padding:20px; z-index:10; box-shadow:0 8px 24px rgba(0,0,0,0.4);">
@@ -670,6 +675,7 @@
         </div>
 
         <p id="quote-display" class="mono" style="font-size:0.75rem; color:var(--gold); text-align:right; margin-top:6px; font-style:italic; display:none;"></p>
+      </div>
       </div>
     </div>
 
